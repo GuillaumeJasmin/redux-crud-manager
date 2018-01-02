@@ -17,21 +17,21 @@ Example with the browser native fetch()
 
 ```js
 const remoteActions = {
-  fetchAll: (params) => {
+  fetchAll: (items, config) => {
     return fetch('http://api.yourserver.com/users', {method: 'GET'}).then(response => {
       return response.toJSON().then(users => {
         return users;
       });
     });
   },
-  fetchOne: (userId, params) => {
+  fetchOne: (userId, config) => {
     return fetch(`http://api.yourserver.com/users/${userId}`, {method: 'GET'}).then(response => {
       return response.toJSON().then(user => {
         return user;
       });
     });
   },
-  create: (user, params) => {
+  create: (user, config) => {
     return fetch(`http://api.yourserver.com/users`, {method: 'POST'}).then(response => {
       return response.toJSON().then(user => {
         return user;

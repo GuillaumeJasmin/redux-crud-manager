@@ -10,7 +10,7 @@
     "test:watch": "mocha --compilers js:babel-core/register --colors -w ./test/*.spec.js",
     "prepublish": "webpack --env dev && webpack --env build"
   },
-  "dependencies": {
+  "devDependencies": {
     "babel-cli": "6.26.0",
     "babel-core": "6.26.0",
     "babel-eslint": "8.0.3",

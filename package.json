@@ -1,6 +1,6 @@
 {
   "name": "redux-crud-manager",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Redux CRUD utilities for keep store sync with your server",
   "main": "dist/ReduxCrudManager.js",
   "scripts": {
@@ -10,7 +10,7 @@
     "test:watch": "mocha --compilers js:babel-core/register --colors -w ./test/*.spec.js",
     "prepublish": "webpack --env dev && webpack --env build"
   },
-  "dependencies": {
+  "devDependencies": {
     "babel-cli": "6.26.0",
     "babel-core": "6.26.0",
     "babel-eslint": "8.0.3",

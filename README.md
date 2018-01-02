@@ -3,8 +3,6 @@ Redux CRUD Manager
 
 ## Keep your redux store sync with your server.
 
-### Warning: this package is not yet published on npm. It is still in alpha development
-
 Redux CRUD Manager provide a simple way to sync your redux store with your remote server.
 
 No more need to write actions and reducer to update your store. 
@@ -71,7 +69,7 @@ You can pass a function to customise the check:
 * ```replace``` {bool} optional - default ```false```
 
 
-* ```remote``` {false} optional - default: ```false``` - save your change in your server, with remoteActions
+* ```remote``` {bool} optional - default: ```false``` - save your change in your server, with remoteActions
 
 
 * ```prefixLocalId``` {string} - optional

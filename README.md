@@ -75,10 +75,10 @@ You can pass a function to customise the check:
 * ```prefixLocalId``` {string} - optional
 
 
-* ```showUpdatingProgress``` {bool} optional - default ```true```
+* ```showUpdatingProgress``` {bool} optional - default ```true``` . ```syncing``` will be set to ```true```
 
 
-* ```updateLocalBeforeRemote``` {bool} optional - default ```false```. Ignored if ```showUpdatingProgress``` is false
+* ```updateLocalBeforeRemote``` {bool} optional - default ```false```. Properties will be updated locally before the server response. Ignored if ```showUpdatingProgress``` is false
 
 
 * ```forceDelete``` {bool} optional - default ```true```

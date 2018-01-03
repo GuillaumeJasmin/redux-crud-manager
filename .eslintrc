@@ -5,14 +5,12 @@
   },
   "extends": "airbnb-base",
   "rules": {
-    "import/no-extraneous-dependencies": ["error", { "devDependencies": true }],
+    "import/no-extraneous-dependencies": 0,
     "arrow-parens": 0
+  },
+  "settings": {
+    "import/resolver": {
+      "webpack": "webpack.config.js"
+    }
   }
-  // "settings": {
-  //   "import/resolver": {
-  //     "node": {
-  //       "paths": ["src"]
-  //     }
-  //   }
-  // }
 }

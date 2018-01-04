@@ -1,6 +1,7 @@
 import createActions from './createActions';
 import createActionCreators from './createActionCreators';
 import createReducer from './createReducer';
+import defaultConfig from './defaultConfig';
 
 /**
  * Create Manager
@@ -20,18 +21,7 @@ import createReducer from './createReducer';
  */
 const createManager = (_config) => {
   const config = {
-    idKey: 'id',
-    cache: false,
-    merge: true,
-    replace: false,
-    remote: false,
-    prefixLocalId: 'ID_CREATED_LOCALLY___',
-    showUpdatingProgress: true,
-    updateLocalBeforeRemote: false,
-    forceDelete: true,
-    includeProperties: null,
-    excludeProperties: null,
-    insertDataBeforeCreateSuccess: false,
+    ...defaultConfig,
     ..._config,
   };
 

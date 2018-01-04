@@ -174,11 +174,11 @@ Ok, nice. But how I can notify my user that my application is making a server re
 Use metadata.
 
 ```js
-import {meta} from 'redux-crud-manager';
+import { getMeta } from 'redux-crud-manager';
 
 const user = store.getState().users.find(...);
 
-if (meta(user).syncing) {
+if (getMeta(user).syncing) {
   // show loader
 }
 ``` 
@@ -186,16 +186,16 @@ if (meta(user).syncing) {
 metadata are defined for a resource, and also for the list of resources:
 
 ```js
-import {meta} from 'redux-crud-manager';
+import { getMeta } from 'redux-crud-manager';
 
 const users = store.getState().users;
 
-if (meta(users).syncing) {
+if (getMeta(users).syncing) {
   // show loader
 }
 ``` 
 
-Why we need to use ```meta(user).synced``` instead of ```user.synced``` ?
+Why we need to use ```getMeta(user).synced``` instead of ```user.synced``` ?
 
 Because metadata is store into a key symbol in order to prevent conflict var name.
 

@@ -1,9 +1,11 @@
 import createManager from './createManager';
 import * as selectors from './selectors';
-import meta from './meta';
+import { meta, getMeta, setCustomMeta as setMeta } from './meta';
 
 export {
   createManager,
   selectors,
-  meta,
+  meta, // deprecated
+  setMeta,
+  getMeta,
 };

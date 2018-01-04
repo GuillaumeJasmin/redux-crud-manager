@@ -1,14 +1,9 @@
 import update from 'immutability-helper';
-import { setMetadataForItems } from './setMetadata';
+import { setMeta, setMetadataForItems } from './meta';
 import symbols from './symbols';
 import { asArray } from './helpers';
 
-const setMetadataState = (state, stateMetadata) => {
-  const oldStateMetadata = state[symbols.metadataKey];
-  const outputState = state.slice();
-  outputState[symbols.metadataKey] = { ...oldStateMetadata, ...stateMetadata };
-  return outputState;
-};
+const setMetadataState = (state, meta) => setMeta(state.slice(), meta);
 
 const localActions = { synced: false, syncing: false, fetching: false };
 const pendingActions = { synced: false, syncing: true, fetching: false };
@@ -162,6 +157,9 @@ export default (defaultConfig, actionReducers) => {
   };
 
   return (state = defaultState, action) => {
+    const oldMeta = state[symbols.metadataKey];
+    const newMeta = (action.data && action.data[symbols.metadataKey]) || {};
+    let stateMeta = { ...oldMeta, ...newMeta };
     switch (action.type) {
       /**
        * FETCH
@@ -174,7 +172,7 @@ export default (defaultConfig, actionReducers) => {
         const itemsMeta = { ...successActions, nextSync: null };
         const items = setMetadataForItems(action.data, itemsMeta);
         const newState = fetchAction(state, items, action.config);
-        const stateMeta = { ...successActions, fetched: true };
+        stateMeta = { ...stateMeta, ...successActions, fetched: true };
         return setMetadataState(newState, stateMeta);
       }
 
@@ -185,14 +183,16 @@ export default (defaultConfig, actionReducers) => {
         const itemsMeta = { ...localActions, nextSync: 'create' };
         const items = setMetadataForItems(action.data, itemsMeta);
         const newState = createAction(state, items, action.config);
-        return setMetadataState(newState, localActions);
+        stateMeta = { ...stateMeta, ...localActions };
+        return setMetadataState(newState, stateMeta);
       }
 
       case actionReducers.created: {
         const itemsMeta = { ...successActions, nextSync: null };
         const items = setMetadataForItems(action.data, itemsMeta);
         const newState = createAction(state, items, action.config);
-        return setMetadataState(newState, successActions);
+        stateMeta = { ...stateMeta, ...successActions };
+        return setMetadataState(newState, stateMeta);
       }
 
       /**
@@ -202,7 +202,8 @@ export default (defaultConfig, actionReducers) => {
         const itemsMeta = { ...localActions, nextSync: 'update' };
         const items = setMetadataForItems(action.data, itemsMeta);
         const newState = updateAction(state, items, action.config);
-        return setMetadataState(newState, localActions);
+        stateMeta = { ...stateMeta, ...localActions };
+        return setMetadataState(newState, stateMeta);
       }
 
       case actionReducers.updating: {
@@ -215,14 +216,16 @@ export default (defaultConfig, actionReducers) => {
         const itemsMeta = { ...pendingActions, nextSync: 'update', keys: keysUnique };
         const items = setMetadataForItems(action.data, itemsMeta);
         const newState = updateAction(state, items, action.config);
-        return setMetadataState(newState, pendingActions);
+        stateMeta = { ...stateMeta, ...pendingActions };
+        return setMetadataState(newState, stateMeta);
       }
 
       case actionReducers.updated: {
         const itemsMeta = { ...successActions, nextSync: null, keys: null };
         const items = setMetadataForItems(action.data, itemsMeta);
         const newState = updateAction(state, items, action.config);
-        return setMetadataState(newState, successActions);
+        stateMeta = { ...stateMeta, ...successActions };
+        return setMetadataState(newState, stateMeta);
       }
 
       /**
@@ -232,21 +235,24 @@ export default (defaultConfig, actionReducers) => {
         const itemsMeta = { ...localActions, nextSync: 'delete', deleted: true };
         const items = setMetadataForItems(action.data, itemsMeta);
         const newState = updateAction(state, items, action.config);
-        return setMetadataState(newState, localActions);
+        stateMeta = { ...stateMeta, ...localActions };
+        return setMetadataState(newState, stateMeta);
       }
 
       case actionReducers.deleting: {
         const itemsMeta = { ...pendingActions, nextSync: 'delete', deleted: true };
         const items = setMetadataForItems(action.data, itemsMeta);
         const newState = updateAction(state, items, action.config);
-        return setMetadataState(newState, pendingActions);
+        stateMeta = { ...stateMeta, ...pendingActions };
+        return setMetadataState(newState, stateMeta);
       }
 
       case actionReducers.deleted: {
         const itemsMeta = { ...successActions, nextSync: null };
         const items = setMetadataForItems(action.data, itemsMeta);
         const newState = deleteAction(state, items, action.config);
-        return setMetadataState(newState, successActions);
+        stateMeta = { ...stateMeta, ...successActions };
+        return setMetadataState(newState, stateMeta);
       }
 
       /**
@@ -299,7 +305,9 @@ export default (defaultConfig, actionReducers) => {
         outputState = updateAction(outputState, itemsUpdated, action.config);
         outputState = deleteAction(outputState, itemsDeleted, action.config);
 
-        return setMetadataState(outputState, successActions);
+        stateMeta = { ...stateMeta, ...successActions };
+
+        return setMetadataState(outputState, stateMeta);
       }
 
       default:

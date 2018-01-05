@@ -1,4 +1,5 @@
 import uniqid from 'uniqid';
+import PubSub from 'pubsub-js';
 import { isFetching, isCreated, isUpdated, isDeleted } from './selectors';
 import { getIn, asArray } from './helpers';
 import symbols from './symbols';
@@ -35,6 +36,9 @@ const filterKeys = (items, include, exclude) => (
  */
 export default (defaultConfig, actions) => {
   const { remoteActions, reducerPath } = defaultConfig;
+  const publish = (eventName, data) => {
+    PubSub.publish(`${defaultConfig.eventKey}.${eventName}`, data);
+  };
 
   return {
     fetchAll: (items, localConfig = {}) => (dispatch, getState) => {
@@ -44,7 +48,10 @@ export default (defaultConfig, actions) => {
         state: getState(),
       };
 
+      publish('willFetchAll', items);
+
       if (items) {
+        publish('willFetchLocal', items);
         return Promise.resolve(dispatch(actions.fetched(items, config)));
       }
 
@@ -59,6 +66,8 @@ export default (defaultConfig, actions) => {
       if (enableCache && existingItems.length > 0) return Promise.resolve(existingItems);
 
       dispatch(actions.fetching());
+
+      publish('willFetchAllRemote', items);
 
       return remoteActions
         .fetchAll(null, config)
@@ -76,15 +85,22 @@ export default (defaultConfig, actions) => {
 
       const state = getIn(getState(), config.reducerPath);
 
+      publish('willFetchOne', itemId);
+
       if (isFetching(state)) return Promise.resolve(null);
 
       const item = state.find(_item => _item[defaultConfig.idKey] === itemId);
 
       const enableCache = config.cache === true || (typeof config.cache === 'function' && config.cache(item) === true);
 
-      if (enableCache && item) return Promise.resolve(item);
+      if (enableCache && item) {
+        publish('willFetchOneLocal', itemId);
+        return Promise.resolve(item);
+      }
 
       dispatch(actions.fetching());
+
+      publish('willFetchOneRemote', itemId);
 
       return remoteActions
         .fetchOne(itemId, config)
@@ -101,6 +117,8 @@ export default (defaultConfig, actions) => {
 
       const items = asArray(data);
 
+      publish('willCreate', items);
+
       if (!config.remote) {
         const itemsWithLocalId = items.map(item => {
           if (item[config.idKey]) {
@@ -116,6 +134,8 @@ export default (defaultConfig, actions) => {
           };
         });
 
+        publish('willCreateLocal', items);
+
         return Promise.resolve(dispatch(actions.createLocal(itemsWithLocalId, config)));
       }
 
@@ -124,6 +144,8 @@ export default (defaultConfig, actions) => {
         config.includeProperties,
         config.excludeProperties,
       );
+
+      publish('willCreateRemote', items);
 
       return remoteActions
         .create(itemsPropertiesFiltered, config)
@@ -140,7 +162,10 @@ export default (defaultConfig, actions) => {
 
       const items = asArray(data);
 
+      publish('willUpdate', items);
+
       if (!config.remote) {
+        publish('willUpdateLocal', items);
         return Promise.resolve(dispatch(actions.updateLocal(items, config)));
       }
 
@@ -159,6 +184,8 @@ export default (defaultConfig, actions) => {
         config.excludeProperties,
       );
 
+      publish('willUpdateRemote', items);
+
       return remoteActions
         .update(itemsPropertiesFiltered, config)
         .then(itemsUpdated => (
@@ -174,11 +201,16 @@ export default (defaultConfig, actions) => {
 
       const items = asArray(data);
 
+      publish('willDelete', items);
+
       if (!config.remote) {
+        publish('willDeleteLocal', items);
         return config.forceDelete
           ? dispatch(actions.deleted(items, config))
           : dispatch(actions.deleteLocal(items, config));
       }
+
+      publish('willDeleteRemote', items);
 
       return remoteActions
         .delete(items, config)

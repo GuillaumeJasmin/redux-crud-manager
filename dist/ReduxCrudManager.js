@@ -70,7 +70,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 6);
+/******/ 	return __webpack_require__(__webpack_require__.s = 7);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -303,6 +303,34 @@ process.umask = function() { return 0; };
 
 /***/ }),
 /* 3 */
+/***/ (function(module, exports) {
+
+module.exports = function(module) {
+	if(!module.webpackPolyfill) {
+		module.deprecate = function() {};
+		module.paths = [];
+		// module.parent = undefined by default
+		if(!module.children) module.children = [];
+		Object.defineProperty(module, "loaded", {
+			enumerable: true,
+			get: function() {
+				return module.l;
+			}
+		});
+		Object.defineProperty(module, "id", {
+			enumerable: true,
+			get: function() {
+				return module.i;
+			}
+		});
+		module.webpackPolyfill = 1;
+	}
+	return module;
+};
+
+
+/***/ }),
+/* 4 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -352,7 +380,7 @@ var isDeleted = exports.isDeleted = function isDeleted(items) {
 };
 
 /***/ }),
-/* 4 */
+/* 5 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -371,7 +399,7 @@ var _symbols = __webpack_require__(0);
 
 var _symbols2 = _interopRequireDefault(_symbols);
 
-var _defaultMeta = __webpack_require__(5);
+var _defaultMeta = __webpack_require__(6);
 
 var _helpers = __webpack_require__(1);
 
@@ -418,7 +446,7 @@ var setMetadataForItems = exports.setMetadataForItems = function setMetadataForI
 };
 
 /***/ }),
-/* 5 */
+/* 6 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -442,7 +470,7 @@ var defaultMetaItem = exports.defaultMetaItem = {
 };
 
 /***/ }),
-/* 6 */
+/* 7 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -453,15 +481,15 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.getMeta = exports.setMeta = exports.meta = exports.selectors = exports.createManager = undefined;
 
-var _createManager = __webpack_require__(7);
+var _createManager = __webpack_require__(8);
 
 var _createManager2 = _interopRequireDefault(_createManager);
 
-var _selectors = __webpack_require__(3);
+var _selectors = __webpack_require__(4);
 
 var selectors = _interopRequireWildcard(_selectors);
 
-var _meta = __webpack_require__(4);
+var _meta = __webpack_require__(5);
 
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
@@ -474,7 +502,7 @@ exports.setMeta = _meta.setCustomMeta;
 exports.getMeta = _meta.getMeta;
 
 /***/ }),
-/* 7 */
+/* 8 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -486,19 +514,23 @@ Object.defineProperty(exports, "__esModule", {
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
-var _createActions = __webpack_require__(8);
+var _pubsubJs = __webpack_require__(11);
+
+var _pubsubJs2 = _interopRequireDefault(_pubsubJs);
+
+var _createActions = __webpack_require__(9);
 
 var _createActions2 = _interopRequireDefault(_createActions);
 
-var _createActionCreators2 = __webpack_require__(11);
+var _createActionCreators2 = __webpack_require__(12);
 
 var _createActionCreators3 = _interopRequireDefault(_createActionCreators2);
 
-var _createReducer = __webpack_require__(12);
+var _createReducer = __webpack_require__(13);
 
 var _createReducer2 = _interopRequireDefault(_createReducer);
 
-var _defaultConfig = __webpack_require__(15);
+var _defaultConfig = __webpack_require__(16);
 
 var _defaultConfig2 = _interopRequireDefault(_defaultConfig);
 
@@ -531,10 +563,26 @@ var createManager = function createManager(_config) {
 
   var actions = (0, _createActions2.default)(config, actionCreators);
 
+  var subscribe = function subscribe(eventName, cb) {
+    _pubsubJs2.default.subscribe(_defaultConfig2.default.eventKey + '.' + eventName, function (msg, data) {
+      return cb(data);
+    });
+  };
+
+  var unsubscribe = function unsubscribe(eventName) {
+    if (eventName) {
+      _pubsubJs2.default.unsubscribe(_defaultConfig2.default.eventKey + '.' + eventName);
+    } else {
+      _pubsubJs2.default.unsubscribe(_defaultConfig2.default.eventKey);
+    }
+  };
+
   return {
     reducer: reducer,
     actionCreators: actionCreators,
-    actions: actions
+    actions: actions,
+    subscribe: subscribe,
+    unsubscribe: unsubscribe
   };
 };
 
@@ -542,7 +590,7 @@ exports.default = createManager;
 module.exports = exports['default'];
 
 /***/ }),
-/* 8 */
+/* 9 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -556,11 +604,15 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
-var _uniqid = __webpack_require__(9);
+var _uniqid = __webpack_require__(10);
 
 var _uniqid2 = _interopRequireDefault(_uniqid);
 
-var _selectors = __webpack_require__(3);
+var _pubsubJs = __webpack_require__(11);
+
+var _pubsubJs2 = _interopRequireDefault(_pubsubJs);
+
+var _selectors = __webpack_require__(4);
 
 var _helpers = __webpack_require__(1);
 
@@ -607,6 +659,9 @@ exports.default = function (defaultConfig, actions) {
   var remoteActions = defaultConfig.remoteActions,
       reducerPath = defaultConfig.reducerPath;
 
+  var publish = function publish(eventName, data) {
+    _pubsubJs2.default.publish(defaultConfig.eventKey + '.' + eventName, data);
+  };
 
   return {
     fetchAll: function fetchAll(items) {
@@ -616,7 +671,10 @@ exports.default = function (defaultConfig, actions) {
           state: getState()
         });
 
+        publish('willFetchAll', items);
+
         if (items) {
+          publish('willFetchLocal', items);
           return Promise.resolve(dispatch(actions.fetched(items, config)));
         }
 
@@ -631,6 +689,8 @@ exports.default = function (defaultConfig, actions) {
         if (enableCache && existingItems.length > 0) return Promise.resolve(existingItems);
 
         dispatch(actions.fetching());
+
+        publish('willFetchAllRemote', items);
 
         return remoteActions.fetchAll(null, config).then(function (fetchedItems) {
           return dispatch(actions.fetched(fetchedItems, config));
@@ -647,6 +707,8 @@ exports.default = function (defaultConfig, actions) {
 
         var state = (0, _helpers.getIn)(getState(), config.reducerPath);
 
+        publish('willFetchOne', itemId);
+
         if ((0, _selectors.isFetching)(state)) return Promise.resolve(null);
 
         var item = state.find(function (_item) {
@@ -655,9 +717,14 @@ exports.default = function (defaultConfig, actions) {
 
         var enableCache = config.cache === true || typeof config.cache === 'function' && config.cache(item) === true;
 
-        if (enableCache && item) return Promise.resolve(item);
+        if (enableCache && item) {
+          publish('willFetchOneLocal', itemId);
+          return Promise.resolve(item);
+        }
 
         dispatch(actions.fetching());
+
+        publish('willFetchOneRemote', itemId);
 
         return remoteActions.fetchOne(itemId, config).then(function (fetchedItem) {
           return dispatch(actions.fetched(fetchedItem, config));
@@ -672,6 +739,8 @@ exports.default = function (defaultConfig, actions) {
 
         var items = (0, _helpers.asArray)(data);
 
+        publish('willCreate', items);
+
         if (!config.remote) {
           var itemsWithLocalId = items.map(function (item) {
             var _extends2;
@@ -685,10 +754,14 @@ exports.default = function (defaultConfig, actions) {
             return _extends({}, item, (_extends2 = {}, _defineProperty(_extends2, config.idKey, localId), _defineProperty(_extends2, _symbols2.default.metadataKey, { localId: localId }), _extends2));
           });
 
+          publish('willCreateLocal', items);
+
           return Promise.resolve(dispatch(actions.createLocal(itemsWithLocalId, config)));
         }
 
         var itemsPropertiesFiltered = filterKeys(items, config.includeProperties, config.excludeProperties);
+
+        publish('willCreateRemote', items);
 
         return remoteActions.create(itemsPropertiesFiltered, config).then(function (itemsCreated) {
           return dispatch(actions.created(itemsCreated, config));
@@ -703,7 +776,10 @@ exports.default = function (defaultConfig, actions) {
 
         var items = (0, _helpers.asArray)(data);
 
+        publish('willUpdate', items);
+
         if (!config.remote) {
+          publish('willUpdateLocal', items);
           return Promise.resolve(dispatch(actions.updateLocal(items, config)));
         }
 
@@ -720,6 +796,8 @@ exports.default = function (defaultConfig, actions) {
 
         var itemsPropertiesFiltered = filterKeys(items, config.includeProperties, config.excludeProperties);
 
+        publish('willUpdateRemote', items);
+
         return remoteActions.update(itemsPropertiesFiltered, config).then(function (itemsUpdated) {
           return dispatch(actions.updated(itemsUpdated, config));
         });
@@ -733,9 +811,14 @@ exports.default = function (defaultConfig, actions) {
 
         var items = (0, _helpers.asArray)(data);
 
+        publish('willDelete', items);
+
         if (!config.remote) {
+          publish('willDeleteLocal', items);
           return config.forceDelete ? dispatch(actions.deleted(items, config)) : dispatch(actions.deleteLocal(items, config));
         }
+
+        publish('willDeleteRemote', items);
 
         return remoteActions.delete(items, config).then(function () {
           return dispatch(actions.deleted(items, config));
@@ -807,7 +890,7 @@ exports.default = function (defaultConfig, actions) {
 module.exports = exports['default'];
 
 /***/ }),
-/* 9 */
+/* 10 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(process, module) {/* 
@@ -848,38 +931,278 @@ function macHandler(error){
     }
 }
 
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(2), __webpack_require__(10)(module)))
-
-/***/ }),
-/* 10 */
-/***/ (function(module, exports) {
-
-module.exports = function(module) {
-	if(!module.webpackPolyfill) {
-		module.deprecate = function() {};
-		module.paths = [];
-		// module.parent = undefined by default
-		if(!module.children) module.children = [];
-		Object.defineProperty(module, "loaded", {
-			enumerable: true,
-			get: function() {
-				return module.l;
-			}
-		});
-		Object.defineProperty(module, "id", {
-			enumerable: true,
-			get: function() {
-				return module.i;
-			}
-		});
-		module.webpackPolyfill = 1;
-	}
-	return module;
-};
-
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(2), __webpack_require__(3)(module)))
 
 /***/ }),
 /* 11 */
+/***/ (function(module, exports, __webpack_require__) {
+
+/* WEBPACK VAR INJECTION */(function(module) {/*
+Copyright (c) 2010,2011,2012,2013,2014 Morgan Roderick http://roderick.dk
+License: MIT - http://mrgnrdrck.mit-license.org
+
+https://github.com/mroderick/PubSubJS
+*/
+(function (root, factory){
+    'use strict';
+
+    var PubSub = {};
+    root.PubSub = PubSub;
+
+    var define = root.define;
+
+    factory(PubSub);
+
+    // AMD support
+    if (typeof define === 'function' && define.amd){
+        define(function() { return PubSub; });
+
+        // CommonJS and Node.js module support
+    } else if (true){
+        if (module !== undefined && module.exports) {
+            exports = module.exports = PubSub; // Node.js specific `module.exports`
+        }
+        exports.PubSub = PubSub; // CommonJS module 1.1.1 spec
+        module.exports = exports = PubSub; // CommonJS
+    }
+
+}(( typeof window === 'object' && window ) || this, function (PubSub){
+    'use strict';
+
+    var messages = {},
+        lastUid = -1;
+
+    function hasKeys(obj){
+        var key;
+
+        for (key in obj){
+            if ( obj.hasOwnProperty(key) ){
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+	 *	Returns a function that throws the passed exception, for use as argument for setTimeout
+	 *	@param { Object } ex An Error object
+	 */
+    function throwException( ex ){
+        return function reThrowException(){
+            throw ex;
+        };
+    }
+
+    function callSubscriberWithDelayedExceptions( subscriber, message, data ){
+        try {
+            subscriber( message, data );
+        } catch( ex ){
+            setTimeout( throwException( ex ), 0);
+        }
+    }
+
+    function callSubscriberWithImmediateExceptions( subscriber, message, data ){
+        subscriber( message, data );
+    }
+
+    function deliverMessage( originalMessage, matchedMessage, data, immediateExceptions ){
+        var subscribers = messages[matchedMessage],
+            callSubscriber = immediateExceptions ? callSubscriberWithImmediateExceptions : callSubscriberWithDelayedExceptions,
+            s;
+
+        if ( !messages.hasOwnProperty( matchedMessage ) ) {
+            return;
+        }
+
+        for (s in subscribers){
+            if ( subscribers.hasOwnProperty(s)){
+                callSubscriber( subscribers[s], originalMessage, data );
+            }
+        }
+    }
+
+    function createDeliveryFunction( message, data, immediateExceptions ){
+        return function deliverNamespaced(){
+            var topic = String( message ),
+                position = topic.lastIndexOf( '.' );
+
+            // deliver the message as it is now
+            deliverMessage(message, message, data, immediateExceptions);
+
+            // trim the hierarchy and deliver message to each level
+            while( position !== -1 ){
+                topic = topic.substr( 0, position );
+                position = topic.lastIndexOf('.');
+                deliverMessage( message, topic, data, immediateExceptions );
+            }
+        };
+    }
+
+    function messageHasSubscribers( message ){
+        var topic = String( message ),
+            found = Boolean(messages.hasOwnProperty( topic ) && hasKeys(messages[topic])),
+            position = topic.lastIndexOf( '.' );
+
+        while ( !found && position !== -1 ){
+            topic = topic.substr( 0, position );
+            position = topic.lastIndexOf( '.' );
+            found = Boolean(messages.hasOwnProperty( topic ) && hasKeys(messages[topic]));
+        }
+
+        return found;
+    }
+
+    function publish( message, data, sync, immediateExceptions ){
+        var deliver = createDeliveryFunction( message, data, immediateExceptions ),
+            hasSubscribers = messageHasSubscribers( message );
+
+        if ( !hasSubscribers ){
+            return false;
+        }
+
+        if ( sync === true ){
+            deliver();
+        } else {
+            setTimeout( deliver, 0 );
+        }
+        return true;
+    }
+
+    /**
+	 *	PubSub.publish( message[, data] ) -> Boolean
+	 *	- message (String): The message to publish
+	 *	- data: The data to pass to subscribers
+	 *	Publishes the the message, passing the data to it's subscribers
+	**/
+    PubSub.publish = function( message, data ){
+        return publish( message, data, false, PubSub.immediateExceptions );
+    };
+
+    /**
+	 *	PubSub.publishSync( message[, data] ) -> Boolean
+	 *	- message (String): The message to publish
+	 *	- data: The data to pass to subscribers
+	 *	Publishes the the message synchronously, passing the data to it's subscribers
+	**/
+    PubSub.publishSync = function( message, data ){
+        return publish( message, data, true, PubSub.immediateExceptions );
+    };
+
+    /**
+	 *	PubSub.subscribe( message, func ) -> String
+	 *	- message (String): The message to subscribe to
+	 *	- func (Function): The function to call when a new message is published
+	 *	Subscribes the passed function to the passed message. Every returned token is unique and should be stored if
+	 *	you need to unsubscribe
+	**/
+    PubSub.subscribe = function( message, func ){
+        if ( typeof func !== 'function'){
+            return false;
+        }
+
+        // message is not registered yet
+        if ( !messages.hasOwnProperty( message ) ){
+            messages[message] = {};
+        }
+
+        // forcing token as String, to allow for future expansions without breaking usage
+        // and allow for easy use as key names for the 'messages' object
+        var token = 'uid_' + String(++lastUid);
+        messages[message][token] = func;
+
+        // return token for unsubscribing
+        return token;
+    };
+
+    /* Public: Clears all subscriptions
+	 */
+    PubSub.clearAllSubscriptions = function clearAllSubscriptions(){
+        messages = {};
+    };
+
+    /*Public: Clear subscriptions by the topic
+	*/
+    PubSub.clearSubscriptions = function clearSubscriptions(topic){
+        var m;
+        for (m in messages){
+            if (messages.hasOwnProperty(m) && m.indexOf(topic) === 0){
+                delete messages[m];
+            }
+        }
+    };
+
+    /* Public: removes subscriptions.
+	 * When passed a token, removes a specific subscription.
+	 * When passed a function, removes all subscriptions for that function
+	 * When passed a topic, removes all subscriptions for that topic (hierarchy)
+	 *
+	 * value - A token, function or topic to unsubscribe.
+	 *
+	 * Examples
+	 *
+	 *		// Example 1 - unsubscribing with a token
+	 *		var token = PubSub.subscribe('mytopic', myFunc);
+	 *		PubSub.unsubscribe(token);
+	 *
+	 *		// Example 2 - unsubscribing with a function
+	 *		PubSub.unsubscribe(myFunc);
+	 *
+	 *		// Example 3 - unsubscribing a topic
+	 *		PubSub.unsubscribe('mytopic');
+	 */
+    PubSub.unsubscribe = function(value){
+        var descendantTopicExists = function(topic) {
+                var m;
+                for ( m in messages ){
+                    if ( messages.hasOwnProperty(m) && m.indexOf(topic) === 0 ){
+                        // a descendant of the topic exists:
+                        return true;
+                    }
+                }
+
+                return false;
+            },
+            isTopic    = typeof value === 'string' && ( messages.hasOwnProperty(value) || descendantTopicExists(value) ),
+            isToken    = !isTopic && typeof value === 'string',
+            isFunction = typeof value === 'function',
+            result = false,
+            m, message, t;
+
+        if (isTopic){
+            PubSub.clearSubscriptions(value);
+            return;
+        }
+
+        for ( m in messages ){
+            if ( messages.hasOwnProperty( m ) ){
+                message = messages[m];
+
+                if ( isToken && message[value] ){
+                    delete message[value];
+                    result = value;
+                    // tokens are unique, so we can just stop here
+                    break;
+                }
+
+                if (isFunction) {
+                    for ( t in message ){
+                        if (message.hasOwnProperty(t) && message[t] === value){
+                            delete message[t];
+                            result = true;
+                        }
+                    }
+                }
+            }
+        }
+
+        return result;
+    };
+}));
+
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(3)(module)))
+
+/***/ }),
+/* 12 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -929,7 +1252,7 @@ exports.default = function (globalConfig) {
 module.exports = exports['default'];
 
 /***/ }),
-/* 12 */
+/* 13 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -941,11 +1264,11 @@ Object.defineProperty(exports, "__esModule", {
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
-var _immutabilityHelper = __webpack_require__(13);
+var _immutabilityHelper = __webpack_require__(14);
 
 var _immutabilityHelper2 = _interopRequireDefault(_immutabilityHelper);
 
-var _meta = __webpack_require__(4);
+var _meta = __webpack_require__(5);
 
 var _symbols = __webpack_require__(0);
 
@@ -953,7 +1276,7 @@ var _symbols2 = _interopRequireDefault(_symbols);
 
 var _helpers = __webpack_require__(1);
 
-var _defaultMeta = __webpack_require__(5);
+var _defaultMeta = __webpack_require__(6);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -1285,10 +1608,10 @@ exports.default = function (defaultConfig, actionReducers) {
 module.exports = exports['default'];
 
 /***/ }),
-/* 13 */
+/* 14 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var invariant = __webpack_require__(14);
+var invariant = __webpack_require__(15);
 
 var hasOwnProperty = Object.prototype.hasOwnProperty;
 var splice = Array.prototype.splice;
@@ -1550,7 +1873,7 @@ function invariantMapOrSet(target, command) {
 
 
 /***/ }),
-/* 14 */
+/* 15 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1609,7 +1932,7 @@ module.exports = invariant;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(2)))
 
 /***/ }),
-/* 15 */
+/* 16 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1618,6 +1941,13 @@ module.exports = invariant;
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+
+var _uniqid = __webpack_require__(10);
+
+var _uniqid2 = _interopRequireDefault(_uniqid);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
 exports.default = {
   idKey: 'id',
   cache: false,
@@ -1630,7 +1960,8 @@ exports.default = {
   forceDelete: true,
   includeProperties: null,
   excludeProperties: null,
-  insertDataBeforeCreateSuccess: false
+  insertDataBeforeCreateSuccess: false,
+  eventKey: (0, _uniqid2.default)()
 };
 module.exports = exports['default'];
 

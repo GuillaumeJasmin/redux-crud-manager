@@ -1,3 +1,4 @@
+import PubSub from 'pubsub-js';
 import createActions from './createActions';
 import createActionCreators from './createActionCreators';
 import createReducer from './createReducer';
@@ -31,10 +32,25 @@ const createManager = (_config) => {
 
   const actions = createActions(config, actionCreators);
 
+  const subscribe = (eventName, cb) => {
+    PubSub.subscribe(`${defaultConfig.eventKey}.${eventName}`, (msg, data) => cb(data));
+  };
+
+  const unsubscribe = (eventName) => {
+    if (eventName) {
+      PubSub.unsubscribe(`${defaultConfig.eventKey}.${eventName}`);
+    } else {
+      PubSub.unsubscribe(defaultConfig.eventKey);
+    }
+  };
+
+
   return {
     reducer,
     actionCreators,
     actions,
+    subscribe,
+    unsubscribe,
   };
 };
 

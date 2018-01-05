@@ -2,6 +2,7 @@ import update from 'immutability-helper';
 import { setMeta, setMetadataForItems } from './meta';
 import symbols from './symbols';
 import { asArray } from './helpers';
+import { defaultMetaItems } from './defaultMeta';
 
 const setMetadataState = (state, meta) => setMeta(state.slice(), meta);
 
@@ -149,12 +150,7 @@ export default (defaultConfig, actionReducers) => {
 
   const defaultState = [];
 
-  defaultState[symbols.metadataKey] = {
-    fetching: false,
-    fetched: false,
-    syncing: false,
-    synced: false,
-  };
+  defaultState[symbols.metadataKey] = defaultMetaItems;
 
   return (state = defaultState, action) => {
     const oldMeta = state[symbols.metadataKey];
@@ -165,7 +161,7 @@ export default (defaultConfig, actionReducers) => {
        * FETCH
        */
       case actionReducers.fetching: {
-        return setMetadataState(state, { fetching: true });
+        return setMetadataState(state, { ...stateMeta, fetching: true });
       }
 
       case actionReducers.fetched: {
@@ -308,6 +304,10 @@ export default (defaultConfig, actionReducers) => {
         stateMeta = { ...stateMeta, ...successActions };
 
         return setMetadataState(outputState, stateMeta);
+      }
+
+      case actionReducers.clearMeta: {
+        return defaultState;
       }
 
       default:

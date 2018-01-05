@@ -243,5 +243,7 @@ export default (defaultConfig, actions) => {
           return dispatch(actions.synced(syncSuccessActions, config));
         });
     },
+
+    clearMeta: () => actions.clearMeta(),
   };
 };

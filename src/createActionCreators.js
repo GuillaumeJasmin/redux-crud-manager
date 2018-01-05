@@ -16,6 +16,7 @@ const actions = [
   // sync
   'syncing',
   'synced',
+  'clearMeta',
 ];
 
 export default (globalConfig) => {

@@ -2,5 +2,4 @@ coverage
 node_modules
 .vscode
 .DS_Store
-dist/ReduxCrudManager.js
-dist/ReduxCrudManager.js.map
+dist

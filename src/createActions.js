@@ -40,8 +40,20 @@ export default (defaultConfig, actions) => {
     PubSub.publish(`${defaultConfig.eventKey}.${eventName}`, data);
   };
 
-  return {
+  const argErrors = (key) => {
+    console.error(`ReduxCRuDManager: ${key} is undefined in fetchAll(). You may forget to fetchAll()(dispatch, getState) in customActions ?`);
+  };
+
+  const outputActions = {
     fetchAll: (items, localConfig = {}) => (dispatch, getState) => {
+      if (!dispatch) {
+        argErrors('dispatch');
+      }
+
+      if (!getState) {
+        argErrors('getState');
+      }
+
       const config = {
         ...defaultConfig,
         ...localConfig,
@@ -278,4 +290,17 @@ export default (defaultConfig, actions) => {
 
     clearMeta: () => actions.clearMeta(),
   };
+
+  if (defaultConfig.customActions) {
+    const customActionsObj = defaultConfig.customActions(outputActions);
+    Object.entries(customActionsObj).forEach(([actionName, action]) => {
+      if (outputActions[actionName] !== undefined) {
+        console.error(`ReduxCRUDManager: custom actions '${actionName}' is not allowed, ${actionName} is a reserved actions. Change the name`);
+      } else {
+        outputActions[actionName] = action;
+      }
+    });
+  }
+
+  return outputActions;
 };

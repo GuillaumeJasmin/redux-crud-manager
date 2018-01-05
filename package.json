@@ -8,7 +8,7 @@
     "dev": "webpack --progress --colors --watch --env dev",
     "test": "mocha --compilers js:babel-core/register --colors ./test/*.spec.js",
     "test:watch": "mocha --compilers js:babel-core/register --colors -w ./test/*.spec.js",
-    "prepublish": "webpack --env dev && webpack --env build"
+    "prepare": "webpack --env dev && webpack --env build"
   },
   "devDependencies": {
     "babel-cli": "6.26.0",

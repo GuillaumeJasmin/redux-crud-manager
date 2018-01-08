@@ -8,7 +8,7 @@ Before import reducer, make sure init your resource:
 import { createManager } from 'redux-crud-manager';
 
 const config = {
-  statePath: 'users',
+  reducerPath: 'users',
   remoteActions: {
     fetchAll: () => {...}
     fetchOne: () => {...}

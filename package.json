@@ -5,10 +5,11 @@
   "main": "dist/ReduxCrudManager.js",
   "scripts": {
     "build": "webpack --env build",
+    "build-all": "webpack --env dev && webpack --env build",
     "dev": "webpack --progress --colors --watch --env dev",
     "test": "mocha --compilers js:babel-core/register --colors ./test/*.spec.js",
     "test:watch": "mocha --compilers js:babel-core/register --colors -w ./test/*.spec.js",
-    "prepublishOnly": "webpack --env dev && webpack --env build"
+    "prepublishOnly": "npm run build-all"
   },
   "devDependencies": {
     "babel-cli": "6.26.0",
@@ -44,5 +45,8 @@
   "bugs": {
     "url": "https://github.com/guillaumejasmin/redux-crud-manager/issues"
   },
-  "homepage": "https://github.com/guillaumejasmin/redux-crud-manager"
+  "homepage": "https://github.com/guillaumejasmin/redux-crud-manager",
+  "config": {
+    "unsafe-perm": true
+  }
 }

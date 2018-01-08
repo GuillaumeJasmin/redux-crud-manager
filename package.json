@@ -4,12 +4,11 @@
   "description": "Redux CRUD utilities for keep store sync with your server",
   "main": "dist/ReduxCrudManager.js",
   "scripts": {
-    "build": "webpack --env build",
-    "build-all": "webpack --env dev && webpack --env build",
+    "build": "webpack --env dev && webpack --env build",
     "dev": "webpack --progress --colors --watch --env dev",
     "test": "mocha --compilers js:babel-core/register --colors ./test/*.spec.js",
     "test:watch": "mocha --compilers js:babel-core/register --colors -w ./test/*.spec.js",
-    "prepublishOnly": "npm run build-all"
+    "prepare": "npm run build"
   },
   "devDependencies": {
     "babel-cli": "6.26.0",

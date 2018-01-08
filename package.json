@@ -3,6 +3,10 @@
   "version": "0.4.3",
   "description": "Redux CRUD utilities for keep store sync with your server",
   "main": "dist/ReduxCrudManager.js",
+  "files": [
+    "dist",
+    "src"
+  ],
   "scripts": {
     "build": "webpack --env dev && webpack --env build",
     "dev": "webpack --progress --colors --watch --env dev",

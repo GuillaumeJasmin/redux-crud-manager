@@ -20,17 +20,22 @@ import defaultConfig from './defaultConfig';
  * @param {string[]} config.excludeProperties
  *
  */
-const createManager = (_config) => {
-  const config = {
+const createManager = (config) => {
+  const reducerKey = config.reducerPath.map(item => item.toUpperCase()).join('_');
+  const prefixReducer = `REDUX_CRUD_MANAGER___${reducerKey}`;
+  const scopeType = Symbol(prefixReducer);
+
+  const finalConfig = {
     ...defaultConfig,
-    ..._config,
+    ...config,
+    prefixReducer,
+    scopeType,
   };
 
-  const { actionCreators, actionReducers } = createActionCreators(config);
+  const { actionCreators, actionReducers } = createActionCreators(finalConfig);
 
-  const reducer = createReducer(config, actionReducers);
-
-  const actions = createActions(config, actionCreators);
+  const reducer = createReducer(finalConfig, actionReducers);
+  const actions = createActions(finalConfig, actionCreators);
 
   const subscribe = (eventName, cb) => {
     PubSub.subscribe(`${defaultConfig.eventKey}.${eventName}`, (msg, data) => cb(data));
@@ -44,10 +49,9 @@ const createManager = (_config) => {
     }
   };
 
-
   return {
     reducer,
-    actionCreators,
+    // actionCreators,
     actions,
     subscribe,
     unsubscribe,

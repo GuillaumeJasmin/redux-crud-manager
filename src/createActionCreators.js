@@ -3,35 +3,36 @@ const actions = [
   'fetching',
   'fetched',
   // create
-  'createLocal',
+  'preCreate',
+  'updating',
   'created',
   // update
-  'updateLocal',
+  'preUpdate',
   'updating',
   'updated',
   // delete
-  'deleteLocal',
+  'preDelete',
   'deleting',
   'deleted',
   // sync
   'syncing',
   'synced',
-  'clearMeta',
+  'clear',
+  'clearChanges',
 ];
 
-export default (globalConfig) => {
-  const reducerKey = globalConfig.reducerPath.map(item => item.toUpperCase()).join('_');
-  const prefixReducer = `REDUX_CRUD_MANAGER_${reducerKey}`;
+export default (config) => {
   const actionCreators = {};
   const actionReducers = {};
 
   actions.forEach((action) => {
-    const type = Symbol(`${prefixReducer}_${action}`);
+    const type = Symbol(`${config.prefixReducer}___${action}`);
     actionReducers[action] = type;
-    actionCreators[action] = (data, config) => ({
+    actionCreators[action] = (data, localConfig) => ({
       type,
+      scopeType: config.scopeType,
       data,
-      config,
+      config: localConfig,
     });
   });
 

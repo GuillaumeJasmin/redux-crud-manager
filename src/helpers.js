@@ -8,3 +8,15 @@ export const getIn = (obj, path) => {
 };
 
 export const asArray = items => (Array.isArray(items) ? items : [items]);
+
+export const throwError = (msg) => {
+  throw new Error(`ReduxCRUDManager: ${msg}`);
+};
+
+export const consoleError = (msg) => {
+  console.error(`ReduxCRUDManager: ${msg}`);
+};
+
+export const consoleWarn = (msg) => {
+  console.error(`ReduxCRUDManager: ${msg}`);
+};

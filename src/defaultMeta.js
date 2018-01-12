@@ -1,13 +1,18 @@
 export const defaultMetaItems = {
   fetching: false,
   fetched: false,
-  syncing: false,
-  synced: false,
-  nextSync: null,
+  creating: false,
+  updating: false,
+  deleting: false,
 };
 
 export const defaultMetaItem = {
-  syncing: false,
-  synced: false,
+  preCreated: false,
+  creating: false,
+  preUpdated: false,
+  updating: false,
+  preDeleted: false,
+  deleting: false,
   localId: null,
+  lastVersion: {},
 };

@@ -1,8 +1,8 @@
-import symbols from './symbols';
+import { metaKey } from './symbols';
 import { defaultMetaItems, defaultMetaItem } from './defaultMeta';
 import { asArray } from './helpers';
 
-export const getMeta = data => data[symbols.metadataKey];
+export const getMeta = data => data[metaKey];
 
 export const meta = (data) => {
   console.warn('ReduxCRUDManager meta() is deprecated. Use getMeta() instead');
@@ -11,9 +11,9 @@ export const meta = (data) => {
 
 export const setMeta = (_data, metaIncoming) => {
   const data = _data;
-  const oldMeta = data[symbols.metadataKey] || {};
+  const oldMeta = data[metaKey] || {};
   const newMeta = { ...oldMeta, ...metaIncoming };
-  data[symbols.metadataKey] = newMeta;
+  data[metaKey] = newMeta;
   return data;
 };
 
@@ -35,3 +35,35 @@ export const setMetadataForItems = (items, _meta) =>
     ...item,
     ...setMeta(item, _meta),
   }));
+
+export const isSyncing = (data) => {
+  const { updating, deleting } = getMeta(data);
+  return updating || deleting;
+};
+
+export const isSynced = (data) => {
+  const { preCreated, preUpdated, preDeleted } = getMeta(data);
+  return !preCreated && preUpdated && preDeleted;
+};
+
+export const getChanges = (item) => {
+  const { lastVersion } = item[metaKey];
+  const changes = [];
+  Object.keys(item).forEach((key) => {
+    if (item[key] !== lastVersion[key]) {
+      changes.push(key);
+    }
+  });
+
+  Object.keys(lastVersion).forEach((key) => {
+    if (item[key] !== lastVersion[key]) {
+      if (!changes.find(_key => _key === key)) {
+        changes.push(key);
+      }
+    }
+  });
+
+  return changes.length ? changes : null;
+};
+
+export const isCreatedOnRemote = (item) => item.id !== getMeta(item).localId;

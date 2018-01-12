@@ -1,3 +1,4 @@
-export default {
-  metadataKey: Symbol('metadata'),
-};
+
+export const metaKey = Symbol('metadata');
+
+export default metaKey;

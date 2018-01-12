@@ -1,11 +1,21 @@
 import createManager from './createManager';
-import * as selectors from './selectors';
-import { meta, getMeta, setCustomMeta as setMeta } from './meta';
+import {
+  meta,
+  getMeta,
+  setCustomMeta as setMeta,
+  isSyncing,
+  isSynced,
+  getChanges,
+  isCreatedOnRemote,
+} from './meta';
 
 export {
   createManager,
-  selectors,
   meta, // deprecated
   setMeta,
   getMeta,
+  isSyncing,
+  isSynced,
+  getChanges,
+  isCreatedOnRemote,
 };

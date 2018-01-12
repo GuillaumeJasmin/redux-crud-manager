@@ -6,6 +6,8 @@ const UglifyJsPlugin = webpack.optimize.UglifyJsPlugin;
 const path = require('path');
 const env = require('yargs').argv.env; // use --env with webpack 2
 
+const isProd = process.env.NODE_ENV === 'production';
+
 let libraryName = 'ReduxCrudManager';
 
 let plugins = [], outputFile;
@@ -17,9 +19,15 @@ if (env === 'build') {
   outputFile = libraryName + '.js';
 }
 
+plugins.push(new webpack.DefinePlugin({
+  'process.env': {
+    'NODE_ENV': JSON.stringify(process.env.NODE_ENV)
+  }
+}))
+
 const config = {
   entry: __dirname + '/src/index.js',
-  devtool: 'source-map',
+  devtool: !isProd ? 'source-map' : null,
   output: {
     path: __dirname + '/dist',
     filename: outputFile,

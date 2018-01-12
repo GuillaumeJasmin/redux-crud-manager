@@ -1,4 +1,5 @@
 import createManager from './createManager';
+import stateSanitizer from './stateSanitizer';
 import {
   meta,
   getMeta,
@@ -18,4 +19,5 @@ export {
   isSynced,
   getChanges,
   isCreatedOnRemote,
+  stateSanitizer,
 };

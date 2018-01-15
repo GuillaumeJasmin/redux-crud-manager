@@ -27,7 +27,7 @@ plugins.push(new webpack.DefinePlugin({
 
 const config = {
   entry: __dirname + '/src/index.js',
-  devtool: !isProd ? 'source-map' : null,
+  devtool: !isProd ? 'source-map' : false,
   output: {
     path: __dirname + '/dist',
     filename: outputFile,

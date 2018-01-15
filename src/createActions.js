@@ -115,7 +115,7 @@ export default (defaultConfig, actions) => {
     return remoteActions
       .fetchOne(itemId, config)
       .then(fetchedItem => (
-        dispatch(actions.fetched(fetchedItem, config))
+        dispatch(actions.fetched([fetchedItem], config))
       ));
   };
 

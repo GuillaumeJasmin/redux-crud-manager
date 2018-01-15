@@ -3,7 +3,6 @@ import PubSub from 'pubsub-js';
 import { getIn, asArray, throwError, consoleError } from './helpers';
 import { metaKey } from './symbols';
 import { getMeta, getChanges } from './meta';
-import { defaultMetaItem } from './defaultMeta';
 
 const filterKeysOne = (properties, include, exclude) => {
   const outputItem = {

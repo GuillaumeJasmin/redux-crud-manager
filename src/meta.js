@@ -37,13 +37,13 @@ export const setMetadataForItems = (items, _meta) =>
   }));
 
 export const isSyncing = (data) => {
-  const { updating, deleting } = getMeta(data);
-  return updating || deleting;
+  const { creating, updating, deleting } = getMeta(data);
+  return creating || updating || deleting;
 };
 
 export const isSynced = (data) => {
   const { preCreated, preUpdated, preDeleted } = getMeta(data);
-  return !preCreated && preUpdated && preDeleted;
+  return !preCreated && !preUpdated && !preDeleted;
 };
 
 export const getChanges = (item) => {
@@ -63,7 +63,7 @@ export const getChanges = (item) => {
     }
   });
 
-  return changes.length ? changes : null;
+  return changes;
 };
 
 export const isCreatedOnRemote = (item) => item.id !== getMeta(item).localId;

@@ -2,27 +2,29 @@ import uniqid from 'uniqid';
 import PubSub from 'pubsub-js';
 import { getIn, asArray, throwError, consoleError } from './helpers';
 import { metaKey } from './symbols';
-import { getMeta } from './meta';
+import { getMeta, getChanges } from './meta';
 import { defaultMetaItem } from './defaultMeta';
 
 const filterKeysOne = (properties, include, exclude) => {
-  const outputItems = {};
+  const outputItem = {
+    [metaKey]: properties[metaKey],
+  };
 
   if (include && include.length) {
     include.forEach((key) => {
-      outputItems[key] = properties[key];
+      outputItem[key] = properties[key];
     });
   } else if (exclude && exclude.length) {
     Object.keys(properties)
       .filter(key => !exclude.includes(key))
       .forEach((key) => {
-        outputItems[key] = properties[key];
+        outputItem[key] = properties[key];
       });
   } else {
     return properties;
   }
 
-  return outputItems;
+  return outputItem;
 };
 
 const filterKeys = (items, include, exclude) => (
@@ -146,9 +148,15 @@ export default (defaultConfig, actions) => {
       };
     });
 
-    return Promise.resolve(dispatch(actions.preCreate(itemsWithLocalId, config)));
+    return dispatch(actions.preCreate(itemsWithLocalId, config));
   };
 
+  /**
+   *________________________________________________________________________________
+   *
+   *                              CREATE
+   *________________________________________________________________________________
+   */
   const create = (data, localConfig = {}) => (dispatch) => {
     if (!dispatch) {
       dispatchMissing('create');
@@ -189,6 +197,12 @@ export default (defaultConfig, actions) => {
       ));
   };
 
+  /**
+   *________________________________________________________________________________
+   *
+   *                              UPDATE
+   *________________________________________________________________________________
+   */
   const preUpdate = (data, localConfig = {}) => (dispatch) => {
     if (!dispatch) {
       dispatchMissing('preUpdate');
@@ -203,7 +217,7 @@ export default (defaultConfig, actions) => {
 
     publish('willPreUpdate', items);
 
-    return Promise.resolve(dispatch(actions.preUpdate(items, config)));
+    return dispatch(actions.preUpdate(items, config));
   };
 
   const update = (data, localConfig = {}) => (dispatch, getState) => {
@@ -254,6 +268,12 @@ export default (defaultConfig, actions) => {
       ));
   };
 
+  /**
+   *________________________________________________________________________________
+   *
+   *                              DELETE
+   *________________________________________________________________________________
+   */
   const preDelete = (data, localConfig = {}) => (dispatch) => {
     if (!dispatch) {
       dispatchMissing('preDelete');
@@ -305,33 +325,48 @@ export default (defaultConfig, actions) => {
 
     const state = getIn(getState(), reducerPath);
 
-    const itemsToCreate = state.filter(item => getMeta(item).preCreated);
-    const itemsToUpdate = state.filter(item => getMeta(item).preUpdated);
-    const itemsToDelete = state.filter(item => getMeta(item).preDeleted);
+    // items to create
+    const itemsToCreate = state
+      .filter(item => {
+        const { preCreated, preDeleted } = getMeta(item);
+        return preCreated && !preDeleted;
+      })
+      .map(item => filterKeysOne(item, config.includeProperties, config.excludeProperties));
 
-    const itemsToCreatePropertiesFiltered = itemsToCreate.length
-      ? filterKeys(itemsToCreate, config.includeProperties, config.excludeProperties)
-      : [];
+    // items to update
+    const itemsToUpdate = state
+      .filter(item => {
+        const { preCreated, preUpdated, preDeleted } = getMeta(item);
+        return !preCreated && preUpdated && !preDeleted;
+      })
+      .map(item => {
+        console.log('getChanges(item)', getChanges(item));
+        return filterKeysOne(item, [defaultConfig.idKey, ...getChanges(item)]);
+      })
+      .map(item => filterKeysOne(item, config.includeProperties, config.excludeProperties));
 
-    const itemsToUpdatePropertiesFiltered = itemsToUpdate.length
-      ? filterKeys(itemsToUpdate, config.includeProperties, config.excludeProperties)
-      : [];
+    // items to delete
+    const itemsToDelete = state
+      .filter(item => {
+        const { preCreated, preDeleted } = getMeta(item);
+        return !preCreated && preDeleted;
+      });
 
     dispatch(actions.syncing({
-      itemsToCreate: itemsToCreatePropertiesFiltered,
-      itemsToUpdate: itemsToUpdatePropertiesFiltered,
+      itemsToCreate,
+      itemsToUpdate,
       itemsToDelete,
     }));
 
     let createPromise;
 
-    if (itemsToCreatePropertiesFiltered.length) {
-      const itemsWithoutId = itemsToCreatePropertiesFiltered.map(item => ({ ...item, [defaultConfig.idKey]: undefined }));
+    if (itemsToCreate.length) {
+      const itemsWithoutId = itemsToCreate.map(item => ({ ...item, [defaultConfig.idKey]: undefined }));
       createPromise = remoteActions
         .create(itemsWithoutId, config)
         .then(items => (
           items.map((itemCreated, index) => {
-            const prevItem = itemsToCreatePropertiesFiltered[index];
+            const prevItem = itemsToCreate[index];
             return {
               ...itemCreated,
               [metaKey]: {
@@ -345,12 +380,12 @@ export default (defaultConfig, actions) => {
       createPromise = Promise.resolve([]);
     }
 
-    const updatePromise = itemsToUpdatePropertiesFiltered.length
-      ? remoteActions.update(itemsToUpdatePropertiesFiltered, config)
+    const updatePromise = itemsToUpdate.length
+      ? remoteActions.update(itemsToUpdate, config)
       : Promise.resolve([]);
 
     const deletePromise = itemsToDelete.length
-      ? remoteActions.delete(itemsToDelete, config)
+      ? remoteActions.delete(itemsToDelete, config).then(() => itemsToDelete)
       : Promise.resolve([]);
 
     return Promise

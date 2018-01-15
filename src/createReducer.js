@@ -16,10 +16,23 @@ const itemsMetas = {
   preDelete: { preDeleted: true },
   deleting: { deleting: true },
   deleted: { deleting: false, preDeleted: false },
+  synced: {
+    preCreated: false,
+    creating: false,
+    preUpdated: false,
+    updating: false,
+    preDeleted: false,
+    deleting: false,
+  },
+  clearChanges: {
+    preCreated: false,
+    preUpdated: false,
+    preDeleted: false,
+  },
 };
 
 const stateMetas = {
-  fetching: { fetching: true, fetched: false },
+  fetching: { fetching: true },
   fetched: { fetching: false, fetched: true },
   preCreate: { preCreated: true },
   created: { preCreated: false },
@@ -37,6 +50,11 @@ const stateMetas = {
     updating: false,
     preDeleted: false,
     deleting: false,
+  },
+  clearChanges: {
+    preCreated: false,
+    preUpdated: false,
+    preDeleted: false,
   },
 };
 
@@ -164,9 +182,12 @@ export default (defaultConfig, actionReducers) => {
 
   const deleteAction = (_state, items) => {
     const indexes = items
-      .map(item => (
-        _state.findIndex(_item => _item[defaultConfig.idKey] === item[defaultConfig.idKey])
-      )).sort((a, b) => {
+      .map(item => {
+        if (!item[defaultConfig.idKey]) {
+          throwError('Delete params not valid');
+        }
+        return _state.findIndex(_item => _item[defaultConfig.idKey] === item[defaultConfig.idKey]);
+      }).sort((a, b) => {
         if (a < b) return -1;
         if (a > b) return 1;
         return 0;
@@ -217,7 +238,7 @@ export default (defaultConfig, actionReducers) => {
     const nextStateMeta = { ...oldMeta, ...newMeta, ...stateMetas[actionReducersKey] };
 
     const listNeedSetMeta = ['fetched', 'preCreate', 'created', 'preUpdate', 'updating', 'preDelete', 'deleting', 'deleted'];
-    const listNeddUpdateVersion = ['fetched', 'updated'];
+    const listNeddUpdateVersion = ['fetched', 'created', 'updated'];
 
     if (listNeedSetMeta.includes(actionReducersKey)) {
       items = setMetadataForItems(items, itemsMetas[actionReducersKey]);
@@ -331,16 +352,25 @@ export default (defaultConfig, actionReducers) => {
 
       case actionReducers.synced: {
         let { itemsCreated, itemsUpdated, itemsDeleted } = action.data;
-        itemsCreated = setMetadataForItems(itemsCreated, { creating: false, preCreated: false });
-        itemsUpdated = setMetadataForItems(itemsUpdated, { updating: false, preUpdated: false });
-        itemsDeleted = setMetadataForItems(itemsDeleted, { deleting: false, preDeleted: false });
+        itemsCreated = setMetadataForItems(itemsCreated, itemsMetas.synced);
+        itemsUpdated = setMetadataForItems(itemsUpdated, itemsMetas.synced);
+        itemsDeleted = setMetadataForItems(itemsDeleted, itemsMetas.synced);
+        const itemsPreCreatedAndPreDeleted = state
+          .filter(item => {
+            const { preCreated, preDeleted } = getMeta(item);
+            return preCreated && preDeleted;
+          });
+        itemsDeleted = [...itemsDeleted, ...itemsPreCreatedAndPreDeleted];
+
+        itemsCreated = updateLastVersion(itemsCreated);
+        itemsUpdated = updateLastVersion(itemsUpdated);
 
         let outputState = state;
         outputState = updateAction(outputState, itemsCreated, action.config);
         outputState = updateAction(outputState, itemsUpdated, action.config);
         outputState = deleteAction(outputState, itemsDeleted, action.config);
 
-        return setStateMeta(outputState, stateMetas.synced);
+        return setStateMeta(outputState, nextStateMeta);
       }
 
       case actionReducers.clear: {
@@ -348,16 +378,30 @@ export default (defaultConfig, actionReducers) => {
       }
 
       case actionReducers.clearChanges: {
-        let itemsToClear = action.data
-          ? state.filter(_item => action.data.find(item => _item[defaultConfig.idKey] === item[defaultConfig.idKey]))
+        const itemsToClear = items
+          ? state.filter(_item => items.find(item => _item[defaultConfig.idKey] === item[defaultConfig.idKey]))
           : state;
 
-        itemsToClear = itemsToClear.map((item) => {
-          const { lastVersion } = getMeta(item);
-          return update(item, { $set: { ...lastVersion } });
-        });
+        const itemsToUpdate = itemsToClear
+          .filter(item => {
+            const { preCreated, preUpdated, preDeleted } = getMeta(item);
+            return !preCreated && preUpdated && !preDeleted;
+          })
+          .map((item) => {
+            const { lastVersion } = getMeta(item);
+            return update(item, { $set: { ...lastVersion, [metaKey]: { localId: item[metaKey].localId } } });
+          });
 
-        const newState = updateAction(state, itemsToClear, action.config);
+        console.log('itemsToUpdate', itemsToUpdate);
+
+        const itemsToDelete = itemsToClear
+          .filter(item => {
+            const { preCreated } = getMeta(item);
+            return preCreated;
+          });
+
+        let newState = updateAction(state, setMetadataForItems(itemsToUpdate, itemsMetas.clearChanges), action.config);
+        newState = deleteAction(newState, setMetadataForItems(itemsToDelete, itemsMetas.clearChanges), action.config);
         return setStateMeta(newState, nextStateMeta);
       }
 

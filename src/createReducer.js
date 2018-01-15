@@ -392,8 +392,6 @@ export default (defaultConfig, actionReducers) => {
             return update(item, { $set: { ...lastVersion, [metaKey]: { localId: item[metaKey].localId } } });
           });
 
-        console.log('itemsToUpdate', itemsToUpdate);
-
         const itemsToDelete = itemsToClear
           .filter(item => {
             const { preCreated } = getMeta(item);

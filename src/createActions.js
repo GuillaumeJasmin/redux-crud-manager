@@ -339,10 +339,7 @@ export default (defaultConfig, actions) => {
         const { preCreated, preUpdated, preDeleted } = getMeta(item);
         return !preCreated && preUpdated && !preDeleted;
       })
-      .map(item => {
-        console.log('getChanges(item)', getChanges(item));
-        return filterKeysOne(item, [defaultConfig.idKey, ...getChanges(item)]);
-      })
+      .map(item => filterKeysOne(item, [defaultConfig.idKey, ...getChanges(item)]))
       .map(item => filterKeysOne(item, config.includeProperties, config.excludeProperties));
 
     // items to delete

@@ -1,8 +1,6 @@
 Redux CRUD Manager
 ===================
 
-[v0.4 docs](docs/v0.4/README.md)
-
 ## Keep your redux store sync with your server.
 
 Redux CRUD Manager provide a simple way to sync your redux store with your remote server.
@@ -24,9 +22,8 @@ Reudx Crud Manager do not include any library around redux, and do not provide a
 
 * [Configuration](#configuration)
 * [Simple Example](#simple-example)
-* [Configure remoteActions](docs/v1/remote-actions.md)
-* [Configure reducer](docs/v1/reducer.md)
-* [events](docs/v1/events.md)
+* [Configure remoteActions](docs/remote-actions.md)
+* [Configure reducer](docs/reducer.md)
 
 ### Configuration
 
@@ -52,8 +49,6 @@ const usersManager = createManager(config);
 
 
 * ```remoteActions```  {object} - required - async action for HTTP request
-
-* ```customActions```  {object} - make possible to create your own actions
 
 
 * ```idKey``` {string} - optional - the key use as the unique identifier. Default: ```id```
@@ -119,56 +114,72 @@ const usersManager = createManager(config);
 
 * [How configure remoteActions](docs/remote-actions.md)
 
-### Actions
-Create, update and delete redux store only
-
+How to create a user localy into redux store ?
 ```js
-import { createManager } from 'redux-crud-manager';
-
-const userManager = createManager({...});
-
-dispatch(userManager.actions.fetchAll());
-
-dispatch(userManager.actions.fetchOne(userId));
-
-// data can be an object or an array
-dispatch(userManager.actions.create(data, { remote: true }));
-
-dispatch(userManager.actions.update(data, { remote: true }));
-
-dispatch(userManager.actions.delete(data, { remote: true }));
+const user = {name: ...};
+dispatch(usersManager.actions.create(user));
 ```
 
-If you want to not make a remote request but only use local change, set `remote: false`
+Well, but with many users ?
 
-#### PreCreate, preUpdate, preDelete
-
-You can create update and delete data locally and then save on remote.
-Its usefull when you want to do many changes and save after.
-
+Use an array:
 ```js
-dispatch(userManager.actions.preCreate(user));
-// or
-dispatch(userManager.actions.preUpdate(user));
-// or
-dispatch(userManager.actions.preDelete(user));
-
-// ...
-
-// this will save changes on remote, links actions.create(data, { remote: true })
-dispatch(userManager.actions.sync());
-
+const users = [{name: ...}, {name: ...}];
+dispatch(usersManager.actions.create(users));
 ```
 
-### Metadata
+How to create on my remote server ?
+
+Use ```{remote: true}```:
 
 ```js
-import { getMeta, isSyncing, isSynced, getChanges } from 'redux-crud-manager';
+dispatch(usersManager.actions.create(users, {remote: true}));
+```
+
+Here is what happens above:
+* POST request to your server
+* redux store update after the request response
+
+The POST request is defined in your remoteActions.create() function in the configuration.
+See [How configure remoteActions](docs/remote-actions.md)
+
+Now, if I want to do many changes localy, and sync my changes with my remote server few minutes later ? 
+
+```js
+// update my first user
+dispatch(usersManager.actions.update({id: 1, name: ...}));
+
+// create a third user
+dispatch(usersManager.actions.create({name: ...}));
+
+// delete my second user
+dispatch(usersManager.actions.delete(userId));
+
+// ... and few minute later, you want to save your data on your server
+
+dispatch(usersManager.actions.sync());
+```
+
+Here is what happens above:
+* PATCH (or PUT) request to your server (update the first user)
+* POST request to your server (create the thrid user)
+* DELETE request to your server (delete the second user)
+* redux store update after all requests response
+
+The ```sync()``` function check which local resource was updated without ```{remote: true}``` option, and make the appropriate request for it (create, update or delete).
+
+ReducCrudManager use metadata to keep the state of your resource sync with your server, and know which resource need to be synced (created, updated or deleted).
+
+Ok, nice. But how I can notify my user that my application is making a server request, in order to show a loader ?
+Use metadata.
+
+```js
+import { getMeta } from 'redux-crud-manager';
 
 const user = store.getState().users.find(...);
 
-if (getMeta(user).preCreated) {
-  // ...
+if (getMeta(user).syncing) {
+  // show loader
 }
 ``` 
 
@@ -184,27 +195,21 @@ if (getMeta(users).syncing) {
 }
 ``` 
 
-metadata item:
-```js
-{
-  preCreated: false,
-  creating: false,
-  preUpdated: false,
-  updating: false,
-  preDeleted: false,
-  deleting: false,
-  localId: null,
-  lastVersion: {},
-}
-```
+Why we need to use ```getMeta(user).synced``` instead of ```user.synced``` ?
 
-metadata list items:
-```js
-{
-  fetching: false,
-  fetched: false,
-  creating: false,
-  updating: false,
-  deleting: false,
-}
-```
+Because metadata is store into a key symbol in order to prevent conflict var name.
+
+List of all metadata:
+
+| key | values | description |
+|:-------|:------|:------|
+|syncing|true / false|indicated if local data is currently syncing into server|
+|synced|true / false|indicated if local data is synced with server data|
+|fetching|true / false|only for resources list, not a single resource| 
+|fetched|true / false|only for resources list, not a single resource| 
+|nextSync|create / update / delete|indicated what is the next action for sync the local data to the server|
+
+
+### TODO
+* save time of the last sync
+* use delay for cache fetching

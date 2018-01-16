@@ -3,6 +3,7 @@ import PubSub from 'pubsub-js';
 import { getIn, asArray, throwError, consoleError } from './helpers';
 import { metaKey } from './symbols';
 import { getMeta, getChanges } from './meta';
+import events from './events';
 
 const filterKeysOne = (properties, include, exclude) => {
   const outputItem = {
@@ -57,7 +58,7 @@ export default (defaultConfig, actions) => {
       state: getState(),
     };
 
-    publish('willFetchAll');
+    publish(events.willFetchAll);
 
     if (items) {
       return Promise.resolve(dispatch(actions.fetched(items, config)));
@@ -77,9 +78,11 @@ export default (defaultConfig, actions) => {
 
     return remoteActions
       .fetchAll(null, config)
-      .then(fetchedItems => (
-        dispatch(actions.fetched(fetchedItems, config))
-      ));
+      .then(fetchedItems => {
+        const dispatchedAction = dispatch(actions.fetched(fetchedItems, config));
+        publish(events.didFetchAll, { dispatch, getState, data: fetchedItems });
+        return dispatchedAction;
+      });
   };
 
   const fetchOne = (itemId, localConfig = {}) => (dispatch, getState) => {
@@ -95,7 +98,7 @@ export default (defaultConfig, actions) => {
 
     const state = getIn(getState(), config.reducerPath);
 
-    publish('willFetchOne', itemId);
+    publish(events.willFetchOne, itemId);
 
     if (getMeta(state).fetching) return Promise.resolve(null);
 
@@ -104,22 +107,21 @@ export default (defaultConfig, actions) => {
     const enableCache = config.cache === true || (typeof config.cache === 'function' && config.cache(item) === true);
 
     if (enableCache && item) {
-      publish('willFetchOneLocal', itemId);
       return Promise.resolve(item);
     }
 
     dispatch(actions.fetching());
 
-    publish('willFetchOneRemote', itemId);
-
     return remoteActions
       .fetchOne(itemId, config)
-      .then(fetchedItem => (
-        dispatch(actions.fetched([fetchedItem], config))
-      ));
+      .then(fetchedItem => {
+        const dispatchedAction = dispatch(actions.fetched([fetchedItem], config));
+        publish(events.didFetchOne, { dispatch, getState, data: fetchedItem });
+        return dispatchedAction;
+      });
   };
 
-  const preCreate = (data, localConfig) => dispatch => {
+  const preCreate = (data, localConfig) => (dispatch, getState) => {
     if (!dispatch) {
       dispatchMissing('preCreate');
     }
@@ -130,8 +132,6 @@ export default (defaultConfig, actions) => {
     };
 
     const items = asArray(data);
-
-    publish('willPreCreate', items);
 
     const itemsWithLocalId = items.map(item => {
       if (item[config.idKey]) {
@@ -147,7 +147,11 @@ export default (defaultConfig, actions) => {
       };
     });
 
-    return dispatch(actions.preCreate(itemsWithLocalId, config));
+    publish(events.willPreCreate, items);
+    const dispatchedAction = dispatch(actions.preCreate(itemsWithLocalId, config));
+    publish(events.didPreCreate, { dispatch, getState, data: itemsWithLocalId });
+
+    return dispatchedAction;
   };
 
   /**
@@ -156,7 +160,7 @@ export default (defaultConfig, actions) => {
    *                              CREATE
    *________________________________________________________________________________
    */
-  const create = (data, localConfig = {}) => (dispatch) => {
+  const create = (data, localConfig = {}) => (dispatch, getState) => {
     if (!dispatch) {
       dispatchMissing('create');
     }
@@ -168,8 +172,6 @@ export default (defaultConfig, actions) => {
 
     const items = asArray(data);
 
-    publish('willCreate', items);
-
     if (!config.remote) {
       items.forEach((item) => {
         if (!item[config.idKey]) {
@@ -180,7 +182,11 @@ export default (defaultConfig, actions) => {
         }
       });
 
-      return Promise.resolve(dispatch(actions.created(items, config)));
+      publish(events.willCreate, items);
+
+      const promise = Promise.resolve(dispatch(actions.created(items, config)));
+      publish(events.didCreate, items);
+      return promise;
     }
 
     const itemsPropertiesFiltered = filterKeys(
@@ -189,11 +195,15 @@ export default (defaultConfig, actions) => {
       config.excludeProperties,
     );
 
+    publish(events.willCreate, items);
+
     return remoteActions
       .create(itemsPropertiesFiltered, config)
-      .then(itemsCreated => (
-        dispatch(actions.created(itemsCreated, config))
-      ));
+      .then(itemsCreated => {
+        const dispatchedAction = dispatch(actions.created(itemsCreated, config));
+        publish(events.didCreate, { dispatch, getState, data: itemsCreated });
+        return dispatchedAction;
+      });
   };
 
   /**
@@ -202,7 +212,7 @@ export default (defaultConfig, actions) => {
    *                              UPDATE
    *________________________________________________________________________________
    */
-  const preUpdate = (data, localConfig = {}) => (dispatch) => {
+  const preUpdate = (data, localConfig = {}) => (dispatch, getState) => {
     if (!dispatch) {
       dispatchMissing('preUpdate');
     }
@@ -214,9 +224,11 @@ export default (defaultConfig, actions) => {
 
     const items = asArray(data);
 
-    publish('willPreUpdate', items);
+    publish(events.willPreUpdate, items);
 
-    return dispatch(actions.preUpdate(items, config));
+    const dispatchedAction = dispatch(actions.preUpdate(items, config));
+    publish(events.didPreUpdate, { dispatch, getState, data: items });
+    return dispatchedAction;
   };
 
   const update = (data, localConfig = {}) => (dispatch, getState) => {
@@ -231,10 +243,12 @@ export default (defaultConfig, actions) => {
 
     const items = asArray(data);
 
-    publish('willUpdate', items);
+    publish(events.willUpdate, { dispatch, getState, data: items });
 
     if (!config.remote) {
-      return Promise.resolve(dispatch(actions.updated(items, config)));
+      const promise = Promise.resolve(dispatch(actions.updated(items, config)));
+      publish(events.didUpdate, { dispatch, getState, data: items });
+      return promise;
     }
 
     if (config.showUpdatingProgress) {
@@ -262,9 +276,11 @@ export default (defaultConfig, actions) => {
 
     return remoteActions
       .update(itemsPropertiesFiltered, config)
-      .then(itemsUpdated => (
-        dispatch(actions.updated(itemsUpdated, config))
-      ));
+      .then(itemsUpdated => {
+        const dispatchedAction = dispatch(actions.updated(itemsUpdated, config));
+        publish(events.didUpdate, { dispatch, getState, data: itemsUpdated });
+        return dispatchedAction;
+      });
   };
 
   /**
@@ -273,7 +289,7 @@ export default (defaultConfig, actions) => {
    *                              DELETE
    *________________________________________________________________________________
    */
-  const preDelete = (data, localConfig = {}) => (dispatch) => {
+  const preDelete = (data, localConfig = {}) => (dispatch, getState) => {
     if (!dispatch) {
       dispatchMissing('preDelete');
     }
@@ -285,13 +301,15 @@ export default (defaultConfig, actions) => {
 
     const items = asArray(data);
 
-    publish('willPreDelete', items);
+    publish(events.willPreDelete, { dispatch, getState, data: items });
 
-    return dispatch(actions.preDelete(items, config));
+    const dispatchedAction = dispatch(actions.preDelete(items, config));
+    publish(events.didPreDelete, { dispatch, getState, data: items });
+    return dispatchedAction;
   };
 
   // unable to named 'delete' because it's a reserved word
-  const deleteMethod = (data, localConfig = {}) => (dispatch) => {
+  const deleteMethod = (data, localConfig = {}) => (dispatch, getState) => {
     if (!dispatch) {
       dispatchMissing('delete');
     }
@@ -303,17 +321,21 @@ export default (defaultConfig, actions) => {
 
     const items = asArray(data);
 
-    publish('willDelete', items);
+    publish(events.willDelete, { dispatch, getState, data: items });
 
     if (!config.remote) {
-      return dispatch(actions.deleted(items, config));
+      const dispatchedAction = Promise.resolve(dispatch(actions.deleted(items, config)));
+      publish(events.willDelete, { dispatch, getState, data: items });
+      return dispatchedAction;
     }
 
     return remoteActions
       .delete(items, config)
-      .then(() => (
-        dispatch(actions.deleted(items, config))
-      ));
+      .then(() => {
+        const dispatchedAction = dispatch(actions.deleted(items, config));
+        publish(events.didDelete, { dispatch, getState, data: items });
+        return dispatchedAction;
+      });
   };
 
   const sync = (localConfig = {}) => (dispatch, getState) => {
@@ -356,6 +378,8 @@ export default (defaultConfig, actions) => {
 
     let createPromise;
 
+    publish(events.willSync, { dispatch, getState, data: { itemsToCreate, itemsToUpdate, itemsToDelete } });
+
     if (itemsToCreate.length) {
       const itemsWithoutId = itemsToCreate.map(item => ({ ...item, [defaultConfig.idKey]: undefined }));
       createPromise = remoteActions
@@ -388,7 +412,9 @@ export default (defaultConfig, actions) => {
       .all([createPromise, updatePromise, deletePromise])
       .then(([itemsCreated, itemsUpdated, itemsDeleted]) => {
         const syncSuccessActions = { itemsCreated, itemsUpdated, itemsDeleted };
-        return dispatch(actions.synced(syncSuccessActions, config));
+        const dispatchedAction = dispatch(actions.synced(syncSuccessActions, config));
+        publish(events.didSync, { dispatch, getState, data: syncSuccessActions });
+        return dispatchedAction;
       });
   };
 

@@ -9,6 +9,7 @@ import {
   getChanges,
   isCreatedOnRemote,
 } from './meta';
+import events from './events';
 
 export {
   createManager,
@@ -20,4 +21,5 @@ export {
   getChanges,
   isCreatedOnRemote,
   stateSanitizer,
+  events,
 };

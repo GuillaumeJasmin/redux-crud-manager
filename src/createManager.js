@@ -9,6 +9,8 @@ import defaultConfig from './defaultConfig';
  *
  * @param {Object}   config
  * @param {Object}   config.remoteActions
+ * @param {Object}   config.customActions
+ * @param {Object}   config.listeners
  * @param {string[]} config.reducerPath
  * @param {string}   config.idKey=id
  * @param {boolean}  config.cache=false

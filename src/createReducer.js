@@ -118,7 +118,7 @@ export default (defaultConfig, actionReducers) => {
 
     items.forEach(dataItem => {
       if (state.find(item => item[config.idKey] === dataItem[config.idKey])) {
-        throwError(`item with id ${dataItem[config.idKey]} already exist`);
+        throwError(`item with ${config.idKey} ${dataItem[config.idKey]} already exist`);
       }
     });
 

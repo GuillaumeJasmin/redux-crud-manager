@@ -29,8 +29,9 @@ export const enumProxy = (data) => {
 
   return new Proxy(Object.freeze(data), {
     get(target, name) {
-      if (!(name in target)) {
-        throw new Error(`enumProxy Error: Getting non-existant property '${name}'`);
+      if (!(name in target) && name !== '__esModule') {
+        const message = `enumProxy Error: Getting non-existant property '${name}' on \n${JSON.stringify(target, null, 4)}`;
+        throw new Error(message);
       }
       return target[name];
     },

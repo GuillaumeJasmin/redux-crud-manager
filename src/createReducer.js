@@ -237,14 +237,14 @@ export default (defaultConfig, actionReducers) => {
     const newMeta = (action.data && action.data[metaKey]) || {};
     const nextStateMeta = { ...oldMeta, ...newMeta, ...stateMetas[actionReducersKey] };
 
-    const listNeedSetMeta = ['fetched', 'preCreate', 'created', 'preUpdate', 'updating', 'preDelete', 'deleting', 'deleted'];
-    const listNeddUpdateVersion = ['fetched', 'created', 'updated'];
+    const listNeedSetMeta = ['fetched', 'preCreate', 'created', 'preUpdate', 'updating', 'updated', 'preDelete', 'deleting', 'deleted'];
+    const listNeedUpdateVersion = ['fetched', 'created', 'updated'];
 
     if (listNeedSetMeta.includes(actionReducersKey)) {
       items = setMetadataForItems(items, itemsMetas[actionReducersKey]);
     }
 
-    if (listNeddUpdateVersion.includes(actionReducersKey)) {
+    if (listNeedUpdateVersion.includes(actionReducersKey)) {
       items = updateLastVersion(items);
     }
 

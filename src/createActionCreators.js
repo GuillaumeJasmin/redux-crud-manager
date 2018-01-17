@@ -4,7 +4,7 @@ const actions = [
   'fetched',
   // create
   'preCreate',
-  'updating',
+  'creating',
   'created',
   // update
   'preUpdate',

@@ -35,7 +35,8 @@ const stateMetas = {
   fetching: { fetching: true },
   fetched: { fetching: false, fetched: true },
   preCreate: { preCreated: true },
-  created: { preCreated: false },
+  creating: { creating: true },
+  created: { preCreated: false, creating: false },
   preUpdate: { preUpdated: true },
   updating: { updating: true },
   updated: { updating: false, preUpdated: false },
@@ -273,6 +274,10 @@ export default (defaultConfig, actionReducers) => {
       case actionReducers.preCreate: {
         const newState = createAction(state, items, action.config);
         return setStateMeta(newState, nextStateMeta);
+      }
+
+      case actionReducers.creating: {
+        return setStateMeta(state, nextStateMeta);
       }
 
       case actionReducers.created: {

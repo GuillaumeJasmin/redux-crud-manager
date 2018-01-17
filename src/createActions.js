@@ -189,6 +189,8 @@ export default (defaultConfig, actions) => {
       return promise;
     }
 
+    dispatch(actions.creating());
+
     const itemsPropertiesFiltered = filterKeys(
       items,
       config.includeProperties,

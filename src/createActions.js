@@ -443,7 +443,7 @@ export default (defaultConfig, actions) => {
   };
 
   if (defaultConfig.customActions) {
-    const customActionsObj = defaultConfig.customActions(outputActions);
+    const customActionsObj = defaultConfig.customActions(outputActions, actions);
     Object.entries(customActionsObj).forEach(([actionName, action]) => {
       if (outputActions[actionName] !== undefined) {
         consoleError(`ReduxCRUDManager: custom actions '${actionName}' is not allowed, ${actionName} is a reserved actions. Change the name`);

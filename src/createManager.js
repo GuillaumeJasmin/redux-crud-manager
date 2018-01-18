@@ -40,7 +40,8 @@ const createManager = (config) => {
   const actions = createActions(finalConfig, actionCreators);
 
   const subscribe = (eventName, cb) => {
-    PubSub.subscribe(`${defaultConfig.eventKey}.${eventName}`, (msg, data) => cb(data));
+    const token = PubSub.subscribe(`${defaultConfig.eventKey}.${eventName}`, (msg, data) => cb(data));
+    return () => PubSub.unsubscribe(token);
   };
 
   const unsubscribe = (eventName) => {

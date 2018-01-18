@@ -58,7 +58,7 @@ export default (defaultConfig, actions) => {
       state: getState(),
     };
 
-    publish(events.willFetchAll);
+    publish(events.willFetchAll, { dispatch, getState });
 
     if (items) {
       return Promise.resolve(dispatch(actions.fetched(items, config)));
@@ -98,7 +98,7 @@ export default (defaultConfig, actions) => {
 
     const state = getIn(getState(), config.reducerPath);
 
-    publish(events.willFetchOne, itemId);
+    publish(events.willFetchOne, { dispatch, getState, data: itemId });
 
     if (getMeta(state).fetching) return Promise.resolve(null);
 
@@ -147,7 +147,7 @@ export default (defaultConfig, actions) => {
       };
     });
 
-    publish(events.willPreCreate, items);
+    publish(events.willPreCreate, { dispatch, getState, data: items });
     const dispatchedAction = dispatch(actions.preCreate(itemsWithLocalId, config));
     publish(events.didPreCreate, { dispatch, getState, data: itemsWithLocalId });
 
@@ -182,10 +182,10 @@ export default (defaultConfig, actions) => {
         }
       });
 
-      publish(events.willCreate, items);
+      publish(events.willCreate, { dispatch, getState, data: items });
 
       const promise = Promise.resolve(dispatch(actions.created(items, config)));
-      publish(events.didCreate, items);
+      publish(events.didCreate, { dispatch, getState, data: items });
       return promise;
     }
 
@@ -197,7 +197,7 @@ export default (defaultConfig, actions) => {
       config.excludeProperties,
     );
 
-    publish(events.willCreate, items);
+    publish(events.willCreate, { dispatch, getState, data: items });
 
     return remoteActions
       .create(itemsPropertiesFiltered, config)
@@ -226,7 +226,7 @@ export default (defaultConfig, actions) => {
 
     const items = asArray(data);
 
-    publish(events.willPreUpdate, items);
+    publish(events.willPreUpdate, { dispatch, getState, data: items });
 
     const dispatchedAction = dispatch(actions.preUpdate(items, config));
     publish(events.didPreUpdate, { dispatch, getState, data: items });

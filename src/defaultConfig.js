@@ -2,7 +2,7 @@ export default {
   idKey: 'id',
   cache: false,
   merge: true,
-  replace: false,
+  replace: true,
   remote: false,
   listeners: {},
   prefixLocalId: 'ID_CREATED_LOCALLY___',

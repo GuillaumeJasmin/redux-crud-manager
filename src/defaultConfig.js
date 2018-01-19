@@ -1,5 +1,3 @@
-import uniqid from 'uniqid';
-
 export default {
   idKey: 'id',
   cache: false,
@@ -14,5 +12,4 @@ export default {
   includeProperties: null,
   excludeProperties: null,
   insertDataBeforeCreateSuccess: false,
-  eventKey: uniqid(),
 };

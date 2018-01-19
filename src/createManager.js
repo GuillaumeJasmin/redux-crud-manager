@@ -1,4 +1,5 @@
 import PubSub from 'pubsub-js';
+import uniqid from 'uniqid';
 import createActions from './createActions';
 import createActionCreators from './createActionCreators';
 import createReducer from './createReducer';
@@ -32,6 +33,7 @@ const createManager = (config) => {
     ...config,
     prefixReducer,
     scopeType,
+    eventKey: uniqid(),
   };
 
   const { actionCreators, actionReducers } = createActionCreators(finalConfig);
@@ -40,15 +42,15 @@ const createManager = (config) => {
   const actions = createActions(finalConfig, actionCreators);
 
   const subscribe = (eventName, cb) => {
-    const token = PubSub.subscribe(`${defaultConfig.eventKey}.${eventName}`, (msg, data) => cb(data));
+    const token = PubSub.subscribe(`${finalConfig.eventKey}.${eventName}`, (msg, data) => cb(data));
     return () => PubSub.unsubscribe(token);
   };
 
   const unsubscribe = (eventName) => {
     if (eventName) {
-      PubSub.unsubscribe(`${defaultConfig.eventKey}.${eventName}`);
+      PubSub.unsubscribe(`${finalConfig.eventKey}.${eventName}`);
     } else {
-      PubSub.unsubscribe(defaultConfig.eventKey);
+      PubSub.unsubscribe(finalConfig.eventKey);
     }
   };
 

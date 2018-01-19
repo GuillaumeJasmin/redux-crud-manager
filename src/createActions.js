@@ -208,6 +208,7 @@ export default (defaultConfig, actions) => {
       });
   };
 
+
   /**
    *________________________________________________________________________________
    *
@@ -284,6 +285,39 @@ export default (defaultConfig, actions) => {
         return dispatchedAction;
       });
   };
+
+  const createOrUpdate = (item, localConfig = {}) => (dispatch) => {
+    if (!dispatch) {
+      dispatchMissing('createOrUpdate');
+    }
+
+    const config = {
+      ...defaultConfig,
+      ...localConfig,
+    };
+
+    if (item[localConfig.idKey]) {
+      if (item[localConfig.idKey] === item[metaKey].localId) {
+        dispatch(actions.creating());
+        return remoteActions.create(item)
+          .then(itemCreated => ({
+            ...itemCreated,
+            [metaKey]: {
+              localId: item[metaKey].localId,
+              localIdReplaceNeeded: true,
+            },
+          }))
+          .then(itemCreated => {
+            dispatch(actions.updated(itemCreated, config));
+          });
+      }
+
+      return dispatch(update(item, config));
+    }
+
+    return dispatch(create(item, config));
+  };
+
 
   /**
    *________________________________________________________________________________
@@ -433,6 +467,7 @@ export default (defaultConfig, actions) => {
     preCreate,
     create,
     creating: actions.creating,
+    createOrUpdate,
     preUpdate,
     updating: actions.updating,
     update,

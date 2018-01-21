@@ -34,13 +34,14 @@ const filterKeys = (items, include, exclude) => (
 );
 
 /**
- * @param {Object} defaultConfig
+ * @param {Object} publicConfig
+ * @param {Object} privateConfig
  * @param {Object} actions
  */
-export default (defaultConfig, actions) => {
-  const { remoteActions, reducerPath } = defaultConfig;
+export default (publicConfig, privateConfig, actions) => {
+  const { remoteActions, reducerPath, idKey } = publicConfig;
   const publish = (eventName, data) => {
-    PubSub.publish(`${defaultConfig.eventKey}.${eventName}`, data);
+    PubSub.publish(`${privateConfig.eventKey}.${eventName}`, data);
   };
 
   const dispatchMissing = (methodName) => {
@@ -53,7 +54,7 @@ export default (defaultConfig, actions) => {
     }
 
     const config = {
-      ...defaultConfig,
+      ...publicConfig,
       ...localConfig,
       state: getState(),
     };
@@ -91,18 +92,18 @@ export default (defaultConfig, actions) => {
     }
 
     const config = {
-      ...defaultConfig,
+      ...publicConfig,
       ...localConfig,
       state: getState(),
     };
 
-    const state = getIn(getState(), config.reducerPath);
+    const state = getIn(getState(), reducerPath);
 
     publish(events.willFetchOne, { dispatch, getState, data: itemId });
 
     if (getMeta(state).fetching) return Promise.resolve(null);
 
-    const item = state.find(_item => _item[defaultConfig.idKey] === itemId);
+    const item = state.find(_item => _item[idKey] === itemId);
 
     const enableCache = config.cache === true || (typeof config.cache === 'function' && config.cache(item) === true);
 
@@ -121,28 +122,34 @@ export default (defaultConfig, actions) => {
       });
   };
 
+  /**
+   *________________________________________________________________________________
+   *
+   *                              CREATE
+   *________________________________________________________________________________
+   */
   const preCreate = (data, localConfig) => (dispatch, getState) => {
     if (!dispatch) {
       dispatchMissing('preCreate');
     }
 
     const config = {
-      ...defaultConfig,
+      ...publicConfig,
       ...localConfig,
     };
 
     const items = asArray(data);
 
     const itemsWithLocalId = items.map(item => {
-      if (item[config.idKey]) {
-        throwError(`key '${config.idKey}' is not allowed for local items`);
+      if (item[idKey]) {
+        throwError(`key '${idKey}' is not allowed for local items`);
       }
 
-      const localId = uniqid(config.prefixLocalId);
+      const localId = uniqid(publicConfig.prefixLocalId);
 
       return {
         ...item,
-        [config.idKey]: localId,
+        [idKey]: localId,
         [metaKey]: { localId },
       };
     });
@@ -154,19 +161,13 @@ export default (defaultConfig, actions) => {
     return dispatchedAction;
   };
 
-  /**
-   *________________________________________________________________________________
-   *
-   *                              CREATE
-   *________________________________________________________________________________
-   */
   const create = (data, localConfig = {}) => (dispatch, getState) => {
     if (!dispatch) {
       dispatchMissing('create');
     }
 
     const config = {
-      ...defaultConfig,
+      ...publicConfig,
       ...localConfig,
     };
 
@@ -174,8 +175,8 @@ export default (defaultConfig, actions) => {
 
     if (!config.remote) {
       items.forEach((item) => {
-        if (!item[config.idKey]) {
-          throwError(`'${config.idKey}' is required on the following object.
+        if (!item[idKey]) {
+          throwError(`'${idKey}' is required on the following object.
             \nIf you want to create a local item, use preCreate() instead of create().
             \n${JSON.stringify(item, null, 4)}
           `);
@@ -221,7 +222,7 @@ export default (defaultConfig, actions) => {
     }
 
     const config = {
-      ...defaultConfig,
+      ...publicConfig,
       ...localConfig,
     };
 
@@ -240,7 +241,7 @@ export default (defaultConfig, actions) => {
     }
 
     const config = {
-      ...defaultConfig,
+      ...publicConfig,
       ...localConfig,
     };
 
@@ -258,7 +259,7 @@ export default (defaultConfig, actions) => {
       if (config.updateLocalBeforeRemote) {
         dispatch(actions.updating(items, config));
       } else {
-        const itemsWithOnlyId = items.map(item => ({ [config.idKey]: item[config.idKey] }));
+        const itemsWithOnlyId = items.map(item => ({ [idKey]: item[idKey] }));
         dispatch(actions.updating(itemsWithOnlyId, config));
       }
     }
@@ -270,9 +271,9 @@ export default (defaultConfig, actions) => {
     );
 
     items.forEach(item => {
-      const state = getIn(getState(), config.reducerPath);
-      const itemFromState = state.find(_item => _item[config.idKey] === item[config.idKey]);
-      if (item[config.idKey] === itemFromState[metaKey].localId) {
+      const state = getIn(getState(), reducerPath);
+      const itemFromState = state.find(_item => _item[idKey] === item[idKey]);
+      if (item[idKey] === itemFromState[metaKey].localId) {
         throwError('update item on remote server is not allowed because item wasn\'t created');
       }
     });
@@ -292,12 +293,12 @@ export default (defaultConfig, actions) => {
     }
 
     const config = {
-      ...defaultConfig,
+      ...publicConfig,
       ...localConfig,
     };
 
-    if (item[localConfig.idKey]) {
-      if (item[localConfig.idKey] === item[metaKey].localId) {
+    if (item[idKey]) {
+      if (item[idKey] === item[metaKey].localId) {
         dispatch(actions.creating());
         return remoteActions.create(item)
           .then(itemCreated => ({
@@ -331,7 +332,7 @@ export default (defaultConfig, actions) => {
     }
 
     const config = {
-      ...defaultConfig,
+      ...publicConfig,
       ...localConfig,
     };
 
@@ -351,7 +352,7 @@ export default (defaultConfig, actions) => {
     }
 
     const config = {
-      ...defaultConfig,
+      ...publicConfig,
       ...localConfig,
     };
 
@@ -376,7 +377,7 @@ export default (defaultConfig, actions) => {
 
   const sync = (localConfig = {}) => (dispatch, getState) => {
     const config = {
-      ...defaultConfig,
+      ...publicConfig,
       ...localConfig,
     };
 
@@ -396,7 +397,7 @@ export default (defaultConfig, actions) => {
         const { preCreated, preUpdated, preDeleted } = getMeta(item);
         return !preCreated && preUpdated && !preDeleted;
       })
-      .map(item => filterKeysOne(item, [defaultConfig.idKey, ...getChanges(item)]))
+      .map(item => filterKeysOne(item, [idKey, ...getChanges(item)]))
       .map(item => filterKeysOne(item, config.includeProperties, config.excludeProperties));
 
     // items to delete
@@ -417,7 +418,7 @@ export default (defaultConfig, actions) => {
     publish(events.willSync, { dispatch, getState, data: { itemsToCreate, itemsToUpdate, itemsToDelete } });
 
     if (itemsToCreate.length) {
-      const itemsWithoutId = itemsToCreate.map(item => ({ ...item, [defaultConfig.idKey]: undefined }));
+      const itemsWithoutId = itemsToCreate.map(item => ({ ...item, [idKey]: undefined }));
       createPromise = remoteActions
         .create(itemsWithoutId, config)
         .then(items => (
@@ -454,12 +455,20 @@ export default (defaultConfig, actions) => {
       });
   };
 
-  const clearChanges = (data) => {
+  const clearChanges = (data) => (dispatch, getState) => {
     const items = data ? asArray(data) : null;
-    return actions.clearChanges(items);
+    publish(events.willClearChanges, { dispatch, getState });
+    const dispatchedAction = dispatch(actions.clearChanges(items));
+    publish(events.didClearChanges, { dispatch, getState });
+    return dispatchedAction;
   };
 
-  const clear = () => actions.clear();
+  const clear = () => (dispatch, getState) => {
+    publish(events.willClear, { dispatch, getState });
+    const dispatchedAction = dispatch(actions.clear());
+    publish(events.didClear, { dispatch, getState });
+    return dispatchedAction;
+  };
 
   const outputActions = {
     fetchAll,
@@ -479,8 +488,8 @@ export default (defaultConfig, actions) => {
     clearChanges,
   };
 
-  if (defaultConfig.customActions) {
-    const customActionsObj = defaultConfig.customActions(outputActions, actions);
+  if (publicConfig.customActions) {
+    const customActionsObj = publicConfig.customActions(outputActions, actions);
     Object.entries(customActionsObj).forEach(([actionName, action]) => {
       if (outputActions[actionName] !== undefined) {
         consoleError(`ReduxCRUDManager: custom actions '${actionName}' is not allowed, ${actionName} is a reserved actions. Change the name`);

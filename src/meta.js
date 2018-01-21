@@ -1,5 +1,5 @@
 import { metaKey } from './symbols';
-import { defaultMetaItems, defaultMetaItem } from './defaultMeta';
+import { defaultMetaList, defaultMetaItem } from './defaultMeta';
 import { asArray } from './helpers';
 
 export const getMeta = data => data[metaKey];
@@ -18,7 +18,7 @@ export const setMeta = (_data, metaIncoming) => {
 };
 
 export const setCustomMeta = (data, metaIncoming) => {
-  const defaultMeta = Array.isArray(data) ? defaultMetaItems : defaultMetaItem;
+  const defaultMeta = Array.isArray(data) ? defaultMetaList : defaultMetaItem;
   const nextMeta = {};
   Object.entries(metaIncoming).forEach(([key, value]) => {
     if (defaultMeta[key] !== undefined) {

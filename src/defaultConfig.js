@@ -4,7 +4,6 @@ export default {
   merge: true,
   replace: true,
   remote: false,
-  listeners: {},
   prefixLocalId: 'ID_CREATED_LOCALLY___',
   showUpdatingProgress: true,
   updateLocalBeforeRemote: false,

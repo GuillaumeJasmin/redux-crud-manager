@@ -11,6 +11,8 @@ const actions = [
   'PreDelete',
   'Delete',
   'Sync',
+  'ClearChanges',
+  'Clear',
 ];
 
 const events = [];

@@ -3,7 +3,7 @@ Redux CRUD Manager
 
 [v0.4 docs](docs/v0.4/README.md)
 
-## Keep your redux store sync with your server.
+## Keep your redux store synced with your server.
 
 Redux CRUD Manager provide a simple way to sync your redux store with your remote server.
 
@@ -26,7 +26,7 @@ Reudx Crud Manager do not include any library around redux, and do not provide a
 * [Simple Example](#simple-example)
 * [Configure remoteActions](docs/v1/remote-actions.md)
 * [Configure reducer](docs/v1/reducer.md)
-* [events](docs/v1/events.md)
+* [Events](docs/v1/events.md)
 
 ### Configuration
 
@@ -71,7 +71,7 @@ You can pass a function to customise the check:
 * ```merge``` {bool} optional - default ```true``` - merge item property on update()
 
 
-* ```replace``` {bool} optional - default ```false```
+* ```replace``` {bool} optional - default ```true```
 
 
 * ```remote``` {bool} optional - default: ```false``` - save your change in your server, with remoteActions

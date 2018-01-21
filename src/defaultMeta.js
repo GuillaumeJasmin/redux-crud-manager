@@ -1,4 +1,4 @@
-export const defaultMetaItems = {
+export const defaultMetaList = {
   fetching: false,
   fetched: false,
   creating: false,

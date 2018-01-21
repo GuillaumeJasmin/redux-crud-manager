@@ -36,10 +36,16 @@ const createManager = (config) => {
     eventKey: uniqid(),
   };
 
-  const { actionCreators, actionReducers } = createActionCreators(finalConfig);
+  const privateConfig = {
+    prefixReducer,
+    scopeType,
+    eventKey: uniqid(),
+  };
 
-  const reducer = createReducer(finalConfig, actionReducers);
-  const actions = createActions(finalConfig, actionCreators);
+  const { actionCreators, actionReducers } = createActionCreators(privateConfig);
+
+  const reducer = createReducer(finalConfig, privateConfig, actionReducers);
+  const actions = createActions(finalConfig, privateConfig, actionCreators);
 
   const subscribe = (eventName, cb) => {
     const token = PubSub.subscribe(`${finalConfig.eventKey}.${eventName}`, (msg, data) => cb(data));

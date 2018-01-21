@@ -2,7 +2,7 @@ import update from 'immutability-helper';
 import { getMeta, setMeta, setMetadataForItems } from './meta';
 import { metaKey } from './symbols';
 import { throwError } from './helpers';
-import { defaultMetaItems } from './defaultMeta';
+import { defaultMetaList } from './defaultMeta';
 
 const setStateMeta = (state, meta) => setMeta(state.slice(), meta);
 
@@ -60,10 +60,13 @@ const stateMetas = {
 };
 
 /**
- * @param {Object} defaultConfig
+ * @param {Object} publicConfig
+ * @param {Object} privateConfig
  * @param {Object} actionReducers
  */
-export default (defaultConfig, actionReducers) => {
+export default (publicConfig, privateConfig, actionReducers) => {
+  const { idKey } = publicConfig;
+
   /**
    * @param {Object} localConfig
    * @param {int}    localConfig.startIndex
@@ -72,7 +75,7 @@ export default (defaultConfig, actionReducers) => {
    */
   const fetchAction = (state, items, localConfig = {}) => {
     const config = {
-      ...defaultConfig,
+      ...publicConfig,
       ...localConfig,
     };
 
@@ -95,7 +98,7 @@ export default (defaultConfig, actionReducers) => {
       const itemToAdd = [];
 
       items.forEach((item) => {
-        const index = state.findIndex(_item => _item[config.idKey] === item[config.idKey]);
+        const index = state.findIndex(_item => _item[idKey] === item[idKey]);
 
         if (index !== -1) {
           itemsToUpdate[index] = { $set: item };
@@ -111,15 +114,10 @@ export default (defaultConfig, actionReducers) => {
     return newState;
   };
 
-  const createAction = (state, items, localConfig = {}) => {
-    const config = {
-      ...defaultConfig,
-      ...localConfig,
-    };
-
+  const createAction = (state, items) => {
     items.forEach(dataItem => {
-      if (state.find(item => item[config.idKey] === dataItem[config.idKey])) {
-        throwError(`item with ${config.idKey} ${dataItem[config.idKey]} already exist`);
+      if (state.find(item => item[idKey] === dataItem[idKey])) {
+        throwError(`item with ${idKey} ${dataItem[idKey]} already exist`);
       }
     });
 
@@ -131,20 +129,20 @@ export default (defaultConfig, actionReducers) => {
 
   const updateAction = (state, items, localConfig = {}) => {
     const config = {
-      ...defaultConfig,
+      ...publicConfig,
       ...localConfig,
     };
 
     const itemsToUpdate = {};
 
     items.forEach((item) => {
-      const id = item[config.idKey];
+      const id = item[idKey];
       const { localId, localIdReplaceNeeded } = item[metaKey];
       let index;
       let newItem = item;
 
       if (localIdReplaceNeeded) {
-        index = state.findIndex((_item) => _item[config.idKey] === localId);
+        index = state.findIndex((_item) => _item[idKey] === localId);
         if (index === -1) {
           throwError(`item with localId '${localId}' is undefined`);
         }
@@ -152,11 +150,11 @@ export default (defaultConfig, actionReducers) => {
           item,
           {
             [metaKey]: { $unset: ['localIdReplaceNeeded'] },
-            [config.idKey]: { $set: id },
+            [idKey]: { $set: id },
           },
         );
       } else {
-        index = state.findIndex(_item => _item[config.idKey] === id);
+        index = state.findIndex(_item => _item[idKey] === id);
         if (index === -1) {
           throwError(`item with id '${id}' is undefined`);
         }
@@ -184,10 +182,10 @@ export default (defaultConfig, actionReducers) => {
   const deleteAction = (_state, items) => {
     const indexes = items
       .map(item => {
-        if (!item[defaultConfig.idKey]) {
+        if (!item[idKey]) {
           throwError('Delete params not valid');
         }
-        return _state.findIndex(_item => _item[defaultConfig.idKey] === item[defaultConfig.idKey]);
+        return _state.findIndex(_item => _item[idKey] === item[idKey]);
       }).sort((a, b) => {
         if (a < b) return -1;
         if (a > b) return 1;
@@ -211,8 +209,7 @@ export default (defaultConfig, actionReducers) => {
   );
 
   const defaultState = [];
-
-  defaultState[metaKey] = defaultMetaItems;
+  defaultState[metaKey] = defaultMetaList;
 
   const caseKeys = {};
 
@@ -221,7 +218,7 @@ export default (defaultConfig, actionReducers) => {
   });
 
   return (state = defaultState, action) => {
-    if (action.scopeType !== defaultConfig.scopeType) return state;
+    if (action.scopeType !== publicConfig.scopeType) return state;
 
     // fetching, fetched, preCreate...
     const actionReducersKey = caseKeys[action.type];
@@ -271,15 +268,12 @@ export default (defaultConfig, actionReducers) => {
        *                                CREATE
        * _____________________________________________________________________________
        */
-      case actionReducers.preCreate: {
-        const newState = createAction(state, items, action.config);
-        return setStateMeta(newState, nextStateMeta);
-      }
 
       case actionReducers.creating: {
         return setStateMeta(state, nextStateMeta);
       }
 
+      case actionReducers.preCreate:
       case actionReducers.created: {
         const newState = createAction(state, items, action.config);
         return setStateMeta(newState, nextStateMeta);
@@ -291,32 +285,10 @@ export default (defaultConfig, actionReducers) => {
        *                                UPDATE
        *  ____________________________________________________________________________
        */
-      case actionReducers.preUpdate: {
-        const newState = updateAction(state, items, action.config);
-        return setStateMeta(newState, nextStateMeta);
-      }
-
-      case actionReducers.updating: {
-        const newState = updateAction(state, items, action.config);
-        return setStateMeta(newState, nextStateMeta);
-      }
-
-      case actionReducers.updated: {
-        const newState = updateAction(state, items, action.config);
-        return setStateMeta(newState, nextStateMeta);
-      }
-
-      /**
-       * _____________________________________________________________________________
-       *
-       *                                    DELETE
-       * _____________________________________________________________________________
-       */
-      case actionReducers.preDelete: {
-        const newState = updateAction(state, items, action.config);
-        return setStateMeta(newState, nextStateMeta);
-      }
-
+      case actionReducers.preUpdate:
+      case actionReducers.updating:
+      case actionReducers.updated:
+      case actionReducers.preDelete:
       case actionReducers.deleting: {
         const newState = updateAction(state, items, action.config);
         return setStateMeta(newState, nextStateMeta);
@@ -384,7 +356,7 @@ export default (defaultConfig, actionReducers) => {
 
       case actionReducers.clearChanges: {
         const itemsToClear = items
-          ? state.filter(_item => items.find(item => _item[defaultConfig.idKey] === item[defaultConfig.idKey]))
+          ? state.filter(_item => items.find(item => _item[idKey] === item[idKey]))
           : state;
 
         const itemsToUpdate = itemsToClear
@@ -409,7 +381,6 @@ export default (defaultConfig, actionReducers) => {
       }
 
       default:
-
         return state;
     }
   };

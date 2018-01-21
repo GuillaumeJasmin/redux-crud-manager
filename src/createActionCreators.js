@@ -21,18 +21,18 @@ const actions = [
   'clearChanges',
 ];
 
-export default (config) => {
+export default (privateConfig) => {
   const actionCreators = {};
   const actionReducers = {};
 
   actions.forEach((action) => {
-    const type = Symbol(`${config.prefixReducer}___${action}`);
+    const type = Symbol(`${privateConfig.prefixReducer}___${action}`);
     actionReducers[action] = type;
-    actionCreators[action] = (data, localConfig) => ({
+    actionCreators[action] = (data, config) => ({
       type,
-      scopeType: config.scopeType,
+      scopeType: privateConfig.scopeType,
       data,
-      config: localConfig,
+      config,
     });
   });
 

@@ -1,6 +1,6 @@
 {
   "name": "redux-crud-manager",
-  "version": "1.0.0-alpha.4",
+  "version": "1.0.0-alpha.5",
   "description": "Redux CRUD utilities for keep store sync with your server",
   "main": "dist/ReduxCrudManager.js",
   "files": [

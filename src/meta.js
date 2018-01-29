@@ -66,4 +66,10 @@ export const getChanges = (item) => {
   return changes;
 };
 
-export const isCreatedOnRemote = (item) => item.id !== getMeta(item).localId;
+export const isCreatedOnRemote = item => {
+  const { localId } = getMeta(item);
+  if (localId) {
+    return !Object.values(item).find(value => value === localId);
+  }
+  return true;
+};

@@ -287,7 +287,7 @@ export default (publicConfig, privateConfig, actions) => {
       });
   };
 
-  const createOrUpdate = (item, localConfig = {}) => (dispatch) => {
+  const createFromItem = (item, localConfig = {}) => (dispatch) => {
     if (!dispatch) {
       dispatchMissing('createOrUpdate');
     }
@@ -297,26 +297,27 @@ export default (publicConfig, privateConfig, actions) => {
       ...localConfig,
     };
 
-    if (item[idKey]) {
-      if (item[idKey] === item[metaKey].localId) {
-        dispatch(actions.creating());
-        return remoteActions.create(item)
-          .then(itemCreated => ({
-            ...itemCreated,
-            [metaKey]: {
-              localId: item[metaKey].localId,
-              localIdReplaceNeeded: true,
-            },
-          }))
-          .then(itemCreated => {
-            dispatch(actions.updated(itemCreated, config));
-          });
-      }
-
-      return dispatch(update(item, config));
+    if (!item[idKey]) {
+      throwError(`item.${idKey} is undefined`);
     }
 
-    return dispatch(create(item, config));
+    if (item[idKey] !== item[metaKey].localId) {
+      throwError(`item with ${idKey} '${item[idKey]}' is already created`);
+    }
+
+    dispatch(actions.creating());
+
+    return remoteActions.create({ ...item, [idKey]: undefined })
+      .then(itemCreated => ({
+        ...itemCreated,
+        [metaKey]: {
+          localId: item[metaKey].localId,
+          localIdReplaceNeeded: true,
+        },
+      }))
+      .then(itemCreated => {
+        dispatch(actions.updated([itemCreated], config));
+      });
   };
 
 
@@ -476,7 +477,7 @@ export default (publicConfig, privateConfig, actions) => {
     preCreate,
     create,
     creating: actions.creating,
-    createOrUpdate,
+    createFromItem,
     preUpdate,
     updating: actions.updating,
     update,

@@ -8,6 +8,7 @@ import {
   isSynced,
   getChanges,
   isCreatedOnRemote,
+  syncingKeys,
 } from './meta';
 import events from './events';
 
@@ -20,6 +21,7 @@ export {
   isSynced,
   getChanges,
   isCreatedOnRemote,
+  syncingKeys,
   stateSanitizer,
   events,
 };

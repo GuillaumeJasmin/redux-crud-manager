@@ -15,4 +15,5 @@ export const defaultMetaItem = {
   deleting: false,
   localId: null,
   lastVersion: {},
+  syncingVersion: null,
 };

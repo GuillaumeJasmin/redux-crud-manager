@@ -259,8 +259,8 @@ export default (publicConfig, privateConfig, actions) => {
       if (config.updateLocalBeforeRemote) {
         dispatch(actions.updating(items, config));
       } else {
-        const itemsWithOnlyId = items.map(item => ({ [idKey]: item[idKey] }));
-        dispatch(actions.updating(itemsWithOnlyId, config));
+        // const itemsWithOnlyId = items.map(item => ({ [idKey]: item[idKey] }));
+        dispatch(actions.updating(items, config));
       }
     }
 
@@ -305,7 +305,7 @@ export default (publicConfig, privateConfig, actions) => {
       throwError(`item with ${idKey} '${item[idKey]}' is already created`);
     }
 
-    dispatch(actions.creating());
+    dispatch(actions.updating([item]));
 
     return remoteActions.create({ ...item, [idKey]: undefined })
       .then(itemCreated => ({

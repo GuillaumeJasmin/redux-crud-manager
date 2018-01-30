@@ -204,7 +204,15 @@ export default (publicConfig, privateConfig, actionReducers) => {
   const updateLastVersion = (items) => (
     items.map((item) => {
       const lastVersion = update(item, { $unset: [metaKey] });
-      return setMeta(item, { lastVersion });
+      return setMeta(item, { lastVersion, syncingVersion: null });
+    })
+  );
+
+  const updateSyncingVersion = (state, syncingItems) => (
+    syncingItems.map((syncingItem) => {
+      const defaultItem = state.find(item => item[idKey] === syncingItem[idKey]);
+      const syncingVersion = update(syncingItem, { $unset: [metaKey] });
+      return setMeta(defaultItem, { ...syncingItem[metaKey], syncingVersion });
     })
   );
 
@@ -285,8 +293,13 @@ export default (publicConfig, privateConfig, actionReducers) => {
        *                                UPDATE
        *  ____________________________________________________________________________
        */
+      case actionReducers.updating: {
+        items = updateSyncingVersion(state, items);
+        const newState = updateAction(state, items, action.config);
+        return setStateMeta(newState, nextStateMeta);
+      }
+
       case actionReducers.preUpdate:
-      case actionReducers.updating:
       case actionReducers.updated:
       case actionReducers.preDelete:
       case actionReducers.deleting: {

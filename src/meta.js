@@ -48,6 +48,9 @@ export const isSynced = (data) => {
 
 export const getChanges = (item) => {
   const { lastVersion } = item[metaKey];
+  if (!lastVersion) {
+    return [];
+  }
   const changes = [];
   Object.keys(item).forEach((key) => {
     if (item[key] !== lastVersion[key]) {
@@ -72,4 +75,10 @@ export const isCreatedOnRemote = item => {
     return !Object.values(item).find(value => value === localId);
   }
   return true;
+};
+
+export const syncingKeys = (item) => {
+  const { syncingVersion } = item[metaKey];
+  if (!syncingVersion) return [];
+  return Object.keys(syncingVersion);
 };

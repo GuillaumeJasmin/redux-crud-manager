@@ -3,7 +3,7 @@ Redux CRUD Manager
 
 [v0.4 docs](docs/v0.4/README.md)
 
-## Keep your redux store synced with your server.
+# Keep your redux store synced with your server.
 
 Redux CRUD Manager provide a simple way to sync your redux store with your remote server.
 
@@ -20,7 +20,7 @@ What precisely each manager ?
 
 Reudx Crud Manager do not include any library around redux, and do not provide any UI component. It only provide actions and reducer.
 
-## Documentation:
+# Documentation:
 
 * [Configuration](#configuration)
 * [Simple Example](#simple-example)
@@ -28,7 +28,7 @@ Reudx Crud Manager do not include any library around redux, and do not provide a
 * [Configure reducer](docs/v1/reducer.md)
 * [Events](docs/v1/events.md)
 
-### Configuration
+# Configuration
 
 Install from npm registry
 ```
@@ -44,8 +44,7 @@ const config = {...};
 const usersManager = createManager(config);
 ```
 
-### Config object
-
+## Config object
 
 
 * ```reducerPath``` {array[string]} - required - Most of time, there is a single item: the reducer name. But if you have nested reducer, define the full path.
@@ -98,7 +97,7 @@ You can pass a function to customise the check:
 
 <a id="simple-example"></a>
 
-### Simple example
+# Simple example
 
 ```js
 import { createManager } from 'redux-crud-manager';
@@ -119,7 +118,7 @@ const usersManager = createManager(config);
 
 * [How configure remoteActions](docs/remote-actions.md)
 
-### Actions
+# Actions
 Create, update and delete redux store only
 
 ```js
@@ -141,7 +140,7 @@ dispatch(userManager.actions.delete(data, { remote: true }));
 
 If you want to not make a remote request but only use local change, set `remote: false`
 
-#### PreCreate, preUpdate, preDelete
+## PreCreate, preUpdate, preDelete
 
 You can create update and delete data locally and then save on remote.
 Its usefull when you want to do many changes and save after.
@@ -160,10 +159,55 @@ dispatch(userManager.actions.sync());
 
 ```
 
-### Metadata
+## Customs actions
+```js
+const userManager = createManager({
+  customActions: (defaultActions, internalsActions) => ({
+    customFetchAll: () => (dispatch, getState) => {
+      dispatch(internalsActions.fetching());
+      fetch('http://...').then(items => {
+        dispatch(internalsActions.fetched(items));
+      });
+    }
+  })
+});
+```
 
 ```js
-import { getMeta, isSyncing, isSynced, getChanges } from 'redux-crud-manager';
+dispatch(userManager.actions.customFetchAll();
+```
+
+
+## defaults actions
+* fetchAll
+* fetchOne
+* preCreate
+* create
+* createFromItem
+* preUpdate
+* update
+* preDelete
+* delete
+* sync
+* clear
+* clearChanges
+
+## internalActions
+* fetching
+* fetched
+* creating
+* created
+* updating
+* updated
+* deleting
+* deleted
+
+
+
+# Metadata
+
+```js
+import { getMeta, isSyncing, isSynced, getChanges, syncingKeys } from 'redux-crud-manager';
 
 const user = store.getState().users.find(...);
 

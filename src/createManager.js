@@ -33,7 +33,6 @@ const createManager = (config) => {
     ...config,
     prefixReducer,
     scopeType,
-    eventKey: uniqid(),
   };
 
   const privateConfig = {
@@ -48,15 +47,15 @@ const createManager = (config) => {
   const actions = createActions(finalConfig, privateConfig, actionCreators);
 
   const subscribe = (eventName, cb) => {
-    const token = PubSub.subscribe(`${finalConfig.eventKey}.${eventName}`, (msg, data) => cb(data));
+    const token = PubSub.subscribe(`${privateConfig.eventKey}.${eventName}`, (msg, data) => cb(data));
     return () => PubSub.unsubscribe(token);
   };
 
   const unsubscribe = (eventName) => {
     if (eventName) {
-      PubSub.unsubscribe(`${finalConfig.eventKey}.${eventName}`);
+      PubSub.unsubscribe(`${privateConfig.eventKey}.${eventName}`);
     } else {
-      PubSub.unsubscribe(finalConfig.eventKey);
+      PubSub.unsubscribe(privateConfig.eventKey);
     }
   };
 

@@ -47,3 +47,13 @@ export const enumProxyFromArray = (items) => {
 
   return enumProxy(obj);
 };
+
+export const deepCmd = (path, cmd) => {
+  let obj = cmd;
+  for (let i = path.length - 1; i >= 0; i -= 1) {
+    obj = {
+      [path[i]]: obj,
+    };
+  }
+  return obj;
+};

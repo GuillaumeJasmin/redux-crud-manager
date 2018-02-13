@@ -69,6 +69,8 @@ You can pass a function to customise the check:
 
 * ```merge``` {bool} optional - default ```true``` - merge item property on update()
 
+* ```deepMerge``` {array} optional - List of properties wich need a deep merge. Currently only available for 1 depth
+
 
 * ```replace``` {bool} optional - default ```true```
 

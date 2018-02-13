@@ -142,7 +142,7 @@ export default (publicConfig, privateConfig, actions) => {
 
     const itemsWithLocalId = items.map(item => {
       if (item[idKey]) {
-        throwError(`key '${idKey}' is not allowed for local items`);
+        throwError(`key '${idKey}' is not allowed in preCreate(). Remove it or use preUpdate()`);
       }
 
       const localId = uniqid(publicConfig.prefixLocalId);
@@ -256,12 +256,13 @@ export default (publicConfig, privateConfig, actions) => {
     }
 
     if (config.showUpdatingProgress) {
-      if (config.updateLocalBeforeRemote) {
-        dispatch(actions.updating(items, config));
-      } else {
-        // const itemsWithOnlyId = items.map(item => ({ [idKey]: item[idKey] }));
-        dispatch(actions.updating(items, config));
-      }
+      dispatch(actions.updating(items, config));
+      // if (config.updateLocalBeforeRemote) {
+      //   dispatch(actions.updating(items, config));
+      // } else {
+      //   // const itemsWithOnlyId = items.map(item => ({ [idKey]: item[idKey] }));
+      //   dispatch(actions.updating(items, config));
+      // }
     }
 
     const itemsPropertiesFiltered = filterKeys(

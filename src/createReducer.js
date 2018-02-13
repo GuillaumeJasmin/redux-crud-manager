@@ -161,10 +161,21 @@ export default (publicConfig, privateConfig, actionReducers) => {
       }
 
       if (config.merge) {
+        const deepKeys = {};
+        if (config.deepMerge) {
+          config.deepMerge.forEach((key) => {
+            deepKeys[key] = {
+              ...state[index][key],
+              ...newItem[key],
+            };
+          });
+        }
+
         itemsToUpdate[index] = {
           $set: {
             ...state[index],
             ...newItem,
+            ...deepKeys,
             [metaKey]: {
               ...state[index][metaKey],
               ...newItem[metaKey],
@@ -208,13 +219,20 @@ export default (publicConfig, privateConfig, actionReducers) => {
     })
   );
 
-  const updateSyncingVersion = (state, syncingItems) => (
-    syncingItems.map((syncingItem) => {
+  const updateSyncingVersion = (state, syncingItems, config) => {
+    if (config.updateLocalBeforeRemote) {
+      return syncingItems.map((syncingItem) => {
+        const syncingVersion = update(syncingItem, { $unset: [metaKey] });
+        return setMeta(syncingItem, { ...syncingItem[metaKey], syncingVersion });
+      });
+    }
+
+    return syncingItems.map((syncingItem) => {
       const defaultItem = state.find(item => item[idKey] === syncingItem[idKey]);
       const syncingVersion = update(syncingItem, { $unset: [metaKey] });
       return setMeta(defaultItem, { ...syncingItem[metaKey], syncingVersion });
-    })
-  );
+    });
+  };
 
   const defaultState = [];
   defaultState[metaKey] = defaultMetaList;
@@ -294,7 +312,7 @@ export default (publicConfig, privateConfig, actionReducers) => {
        *  ____________________________________________________________________________
        */
       case actionReducers.updating: {
-        items = updateSyncingVersion(state, items);
+        items = updateSyncingVersion(state, items, action.config);
         const newState = updateAction(state, items, action.config);
         return setStateMeta(newState, nextStateMeta);
       }

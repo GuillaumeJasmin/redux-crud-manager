@@ -310,7 +310,7 @@ export default (publicConfig, privateConfig, actions) => {
       }
     });
 
-    dispatch(actions.updating(items));
+    dispatch(actions.updating(items, config));
 
     return remoteActions.create(items.map(item => ({ ...item, [idKey]: undefined })))
       .then(itemsCreated => itemsCreated.map((itemCreated, index) => ({

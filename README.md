@@ -1,6 +1,9 @@
 Redux CRUD Manager
 ===================
 
+## Next version (currently alpha)
+[Try next version v1](https://github.com/GuillaumeJasmin/redux-crud-manager/tree/next)
+
 ## Keep your redux store sync with your server.
 
 Redux CRUD Manager provide a simple way to sync your redux store with your remote server.

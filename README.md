@@ -1,26 +1,21 @@
-Redux CRUD Manager
+Redux CRUD Manager - v1 alpha
 ===================
 
 [v0.4 docs](docs/v0.4/README.md)
 
-# Keep your redux store synced with your server.
+## Keep your redux store synced with your server.
 
 Redux CRUD Manager provide a simple way to sync your redux store with your remote server.
-
 No more need to write actions and reducer to update your store. 
 
-What precisely each manager ?
-
-* It use CRUD pattern
-* update your data localy (redux store)
-* update your data localy AND sync at the same time to your remote server
-* update your data localy, and save few moment later to your remote server
-* indicate loading process to the user (for example with a loader). No need to manually set a ```isLoading``` flag.
-* fetch your data and use local data (redux) if resource are already fetched.
+* CRUD pattern
+* update local data and sync with remote server when you want
+* update local data only
+* metadata for pending action
 
 Reudx Crud Manager do not include any library around redux, and do not provide any UI component. It only provide actions and reducer.
 
-# Documentation:
+## Documentation
 
 * [Configuration](#configuration)
 * [Simple Example](#simple-example)
@@ -28,11 +23,11 @@ Reudx Crud Manager do not include any library around redux, and do not provide a
 * [Configure reducer](docs/v1/reducer.md)
 * [Events](docs/v1/events.md)
 
-# Configuration
+## Configuration
 
 Install from npm registry
 ```
-npm install redux-crud-manager --save
+npm install redux-crud-manager@next --save
 ```
 
 <a id="configuration"></a>
@@ -44,7 +39,7 @@ const config = {...};
 const usersManager = createManager(config);
 ```
 
-## Config object
+### Config object
 
 
 * ```reducerPath``` {array[string]} - required - Most of time, there is a single item: the reducer name. But if you have nested reducer, define the full path.
@@ -95,11 +90,13 @@ You can pass a function to customise the check:
 
 * ```excludeProperties``` {array[string]} optional - include property on save. Ignored if ```includeProperties``` is defined
 
+* ```params``` {object} optional - custom params used to pass arbitrary data. Use it as you want. [See example](docs/v1/remote-actions.md#custom-params)
+
 
 
 <a id="simple-example"></a>
 
-# Simple example
+## Simple example
 
 ```js
 import { createManager } from 'redux-crud-manager';
@@ -118,10 +115,10 @@ const config = {
 const usersManager = createManager(config);
 ```
 
-* [How configure remoteActions](docs/remote-actions.md)
+* [How configure remoteActions](docs/v1/remote-actions.md)
 
-# Actions
-Create, update and delete redux store only
+## Actions
+Create, update and delete
 
 ```js
 import { createManager } from 'redux-crud-manager';
@@ -132,7 +129,6 @@ dispatch(userManager.actions.fetchAll());
 
 dispatch(userManager.actions.fetchOne(userId));
 
-// data can be an object or an array
 dispatch(userManager.actions.create(data, { remote: true }));
 
 dispatch(userManager.actions.update(data, { remote: true }));
@@ -140,9 +136,11 @@ dispatch(userManager.actions.update(data, { remote: true }));
 dispatch(userManager.actions.delete(data, { remote: true }));
 ```
 
-If you want to not make a remote request but only use local change, set `remote: false`
+Note: `data` can be an object or an array
 
-## PreCreate, preUpdate, preDelete
+If you don't want to make a remote request but only use local change, set `remote: false`
+
+### PreCreate, preUpdate, preDelete
 
 You can create update and delete data locally and then save on remote.
 Its usefull when you want to do many changes and save after.
@@ -156,12 +154,39 @@ dispatch(userManager.actions.preDelete(user));
 
 // ...
 
-// this will save changes on remote, links actions.create(data, { remote: true })
+// this will save changes on remote, like actions.create(data, { remote: true })
 dispatch(userManager.actions.sync());
 
 ```
 
-## Customs actions
+### Defaults actions
+* fetchAll
+* fetchOne
+* preCreate
+* create
+* createFromItem
+* preUpdate
+* update
+* preDelete
+* delete
+* sync
+* clear
+* clearChanges
+
+### Internals actions
+
+Internal actions are used inside `defaults actions` , and you will never have to use them. But if you need to create custom actions, you can use it.
+
+* fetching
+* fetched
+* creating
+* created
+* updating
+* updated
+* deleting
+* deleted
+
+### Customs actions
 ```js
 const userManager = createManager({
   customActions: (defaultActions, internalsActions) => ({
@@ -179,34 +204,7 @@ const userManager = createManager({
 dispatch(userManager.actions.customFetchAll();
 ```
 
-
-## defaults actions
-* fetchAll
-* fetchOne
-* preCreate
-* create
-* createFromItem
-* preUpdate
-* update
-* preDelete
-* delete
-* sync
-* clear
-* clearChanges
-
-## internalActions
-* fetching
-* fetched
-* creating
-* created
-* updating
-* updated
-* deleting
-* deleted
-
-
-
-# Metadata
+## Metadata
 
 ```js
 import { getMeta, isSyncing, isSynced, getChanges, syncingKeys } from 'redux-crud-manager';

@@ -11,4 +11,5 @@ export default {
   includeProperties: null,
   excludeProperties: null,
   insertDataBeforeCreateSuccess: false,
+  params: {}, // reserved key for user params. Do never user it as internal params
 };

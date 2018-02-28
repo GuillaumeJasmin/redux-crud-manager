@@ -42,18 +42,18 @@ const usersManager = createManager(config);
 ### Config object
 
 
-* ```reducerPath``` {array[string]} - required - Most of time, there is a single item: the reducer name. But if you have nested reducer, define the full path.
+* `reducerPath` {array[string]} - required - Most of time, there is a single item: the reducer name. But if you have nested reducer, define the full path.
 
 
-* ```remoteActions```  {object} - required - async action for HTTP request
+* `remoteActions`  {object} - required - async action for HTTP request
 
-* ```customActions```  {object} - make possible to create your own actions
-
-
-* ```idKey``` {string} - optional - the key use as the unique identifier. Default: ```id```
+* `customActions`  {object} - make possible to create your own actions
 
 
-* ```cache``` {bool | function} - enable cache if resources are already fetched. Default: ```false```
+* `idKey` {string} - optional - the key use as the unique identifier. Default: `id`
+
+
+* `cache` {bool | function} - enable cache if resources are already fetched. Default: `false`
 You can pass a function to customise the check:
 ```js
 {
@@ -62,35 +62,35 @@ You can pass a function to customise the check:
 ```
 
 
-* ```merge``` {bool} optional - default ```true``` - merge item property on update()
+* `merge` {bool} optional - default `true` - merge item property on update()
 
-* ```deepMerge``` {array} optional - List of properties wich need a deep merge. Currently only available for 1 depth
-
-
-* ```replace``` {bool} optional - default ```true```
+* `deepMerge` {array} optional - List of properties wich need a deep merge. Currently only available for 1 depth
 
 
-* ```remote``` {bool} optional - default: ```false``` - save your change in your server, with remoteActions
+* `replace` {bool} optional - default `true`
 
 
-* ```prefixLocalId``` {string} - optional
+* `remote` {bool} optional - default: `false` - save your change in your server, with remoteActions
 
 
-* ```showUpdatingProgress``` {bool} optional - default ```true``` . ```syncing``` will be set to ```true```
+* `prefixLocalId` {string} - optional
 
 
-* ```updateLocalBeforeRemote``` {bool} optional - default ```false```. Properties will be updated locally before the server response. Ignored if ```showUpdatingProgress``` is false
+* `showUpdatingProgress` {bool} optional - default `true` . `syncing` will be set to `true`
 
 
-* ```forceDelete``` {bool} optional - default ```true```
+* `updateLocalBeforeRemote` {bool} optional - default `false`. Properties will be updated locally before the server response. Ignored if `showUpdatingProgress` is false
 
 
-* ```includeProperties``` {array[string]} optional - include property on save.
+* `forceDelete` {bool} optional - default `true`
 
 
-* ```excludeProperties``` {array[string]} optional - include property on save. Ignored if ```includeProperties``` is defined
+* `includeProperties` {array[string]} optional - include property on save.
 
-* ```params``` {object} optional - custom params used to pass arbitrary data. Use it as you want. [See example](docs/v1/remote-actions.md#custom-params)
+
+* `excludeProperties` {array[string]} optional - include property on save. Ignored if `includeProperties` is defined
+
+* `params` {object} optional - custom params used to pass arbitrary data. Use it as you want. [See example](docs/v1/remote-actions.md#custom-params)
 
 
 

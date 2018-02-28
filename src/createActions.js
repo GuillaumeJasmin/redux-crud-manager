@@ -1,8 +1,7 @@
 import uniqid from 'uniqid';
 import PubSub from 'pubsub-js';
 import { getIn, asArray, throwError, consoleError } from './helpers';
-import { metaKey } from './symbols';
-import { getMeta, getChanges } from './meta';
+import { metaKey, getMeta, getChanges } from './meta';
 import events from './events';
 
 const filterKeysOne = (properties, include, exclude) => {

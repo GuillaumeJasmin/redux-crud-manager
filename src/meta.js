@@ -1,6 +1,7 @@
-import { metaKey } from './symbols';
 import { defaultMetaList, defaultMetaItem } from './defaultMeta';
 import { asArray } from './helpers';
+
+export const metaKey = Symbol('metadata');
 
 export const getMeta = data => data[metaKey];
 

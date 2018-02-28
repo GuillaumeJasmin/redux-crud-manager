@@ -1,6 +1,5 @@
 import update from 'immutability-helper';
-import { getMeta, setMeta, setMetadataForItems } from './meta';
-import { metaKey } from './symbols';
+import { metaKey, getMeta, setMeta, setMetadataForItems } from './meta';
 import { throwError } from './helpers';
 import { defaultMetaList } from './defaultMeta';
 

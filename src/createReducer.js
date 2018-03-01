@@ -245,6 +245,8 @@ export default (publicConfig, privateConfig, actionReducers) => {
   return (state = defaultState, action) => {
     if (action.scopeType !== publicConfig.scopeType) return state;
 
+    const actionConfig = action.config || {};
+
     // fetching, fetched, preCreate...
     const actionReducersKey = caseKeys[action.type];
     let items = action.data;
@@ -283,7 +285,7 @@ export default (publicConfig, privateConfig, actionReducers) => {
       }
 
       case actionReducers.fetched: {
-        const newState = fetchAction(state, items, action.config);
+        const newState = fetchAction(state, items, actionConfig);
         return setStateMeta(newState, nextStateMeta);
       }
 
@@ -300,7 +302,7 @@ export default (publicConfig, privateConfig, actionReducers) => {
 
       case actionReducers.preCreate:
       case actionReducers.created: {
-        const newState = createAction(state, items, action.config);
+        const newState = createAction(state, items, actionConfig);
         return setStateMeta(newState, nextStateMeta);
       }
 
@@ -311,8 +313,8 @@ export default (publicConfig, privateConfig, actionReducers) => {
        *  ____________________________________________________________________________
        */
       case actionReducers.updating: {
-        items = updateSyncingVersion(state, items, action.config);
-        const newState = updateAction(state, items, action.config);
+        items = updateSyncingVersion(state, items, actionConfig);
+        const newState = updateAction(state, items, actionConfig);
         return setStateMeta(newState, nextStateMeta);
       }
 
@@ -320,12 +322,12 @@ export default (publicConfig, privateConfig, actionReducers) => {
       case actionReducers.updated:
       case actionReducers.preDelete:
       case actionReducers.deleting: {
-        const newState = updateAction(state, items, action.config);
+        const newState = updateAction(state, items, actionConfig);
         return setStateMeta(newState, nextStateMeta);
       }
 
       case actionReducers.deleted: {
-        const newState = deleteAction(state, items, action.config);
+        const newState = deleteAction(state, items, actionConfig);
         return setStateMeta(newState, nextStateMeta);
       }
 
@@ -343,9 +345,9 @@ export default (publicConfig, privateConfig, actionReducers) => {
 
         let outputState = state;
 
-        outputState = updateAction(outputState, itemsToCreate, action.config);
-        outputState = updateAction(outputState, itemsToUpdate, action.config);
-        outputState = updateAction(outputState, itemsToDelete, action.config);
+        outputState = updateAction(outputState, itemsToCreate, actionConfig);
+        outputState = updateAction(outputState, itemsToUpdate, actionConfig);
+        outputState = updateAction(outputState, itemsToDelete, actionConfig);
 
         const syncingStateMeta = {
           ...nextStateMeta,
@@ -373,9 +375,9 @@ export default (publicConfig, privateConfig, actionReducers) => {
         itemsUpdated = updateLastVersion(itemsUpdated);
 
         let outputState = state;
-        outputState = updateAction(outputState, itemsCreated, action.config);
-        outputState = updateAction(outputState, itemsUpdated, action.config);
-        outputState = deleteAction(outputState, itemsDeleted, action.config);
+        outputState = updateAction(outputState, itemsCreated, actionConfig);
+        outputState = updateAction(outputState, itemsUpdated, actionConfig);
+        outputState = deleteAction(outputState, itemsDeleted, actionConfig);
 
         return setStateMeta(outputState, nextStateMeta);
       }
@@ -405,8 +407,8 @@ export default (publicConfig, privateConfig, actionReducers) => {
             return preCreated;
           });
 
-        let newState = updateAction(state, setMetadataForItems(itemsToUpdate, itemsMetas.clearChanges), action.config);
-        newState = deleteAction(newState, setMetadataForItems(itemsToDelete, itemsMetas.clearChanges), action.config);
+        let newState = updateAction(state, setMetadataForItems(itemsToUpdate, itemsMetas.clearChanges), actionConfig);
+        newState = deleteAction(newState, setMetadataForItems(itemsToDelete, itemsMetas.clearChanges), actionConfig);
         return setStateMeta(newState, nextStateMeta);
       }
 

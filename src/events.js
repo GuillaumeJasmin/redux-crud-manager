@@ -1,4 +1,4 @@
-import { enumProxyFromArray } from './helpers';
+// import { enumProxyFromArray } from './helpers';
 
 const prefixs = ['will', 'did'];
 const actions = [
@@ -23,4 +23,11 @@ prefixs.forEach(prefix => {
   });
 });
 
-export default enumProxyFromArray(events);
+// export default enumProxyFromArray(events);
+const eventObj = {};
+
+events.forEach((item) => {
+  eventObj[item] = item;
+});
+
+export default eventObj;

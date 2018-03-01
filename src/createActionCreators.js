@@ -19,6 +19,7 @@ const actions = [
   'synced',
   'clear',
   'clearChanges',
+  'clearPendingActions',
 ];
 
 export default (privateConfig) => {

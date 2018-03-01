@@ -205,6 +205,10 @@ export default (publicConfig, privateConfig, actions) => {
         const dispatchedAction = dispatch(actions.created(itemsCreated, config));
         publish(events.didCreate, { dispatch, getState, data: itemsCreated });
         return dispatchedAction;
+      })
+      .catch(error => {
+        dispatch(actions.clearPendingActions());
+        return Promise.reject(error);
       });
   };
 
@@ -284,6 +288,10 @@ export default (publicConfig, privateConfig, actions) => {
         const dispatchedAction = dispatch(actions.updated(itemsUpdated, config));
         publish(events.didUpdate, { dispatch, getState, data: itemsUpdated });
         return dispatchedAction;
+      })
+      .catch(error => {
+        dispatch(actions.clearPendingActions());
+        return Promise.reject(error);
       });
   };
 
@@ -321,6 +329,10 @@ export default (publicConfig, privateConfig, actions) => {
       })))
       .then(itemsCreated => {
         dispatch(actions.updated(itemsCreated, config));
+      })
+      .catch(error => {
+        dispatch(actions.clearPendingActions());
+        return Promise.reject(error);
       });
   };
 
@@ -377,6 +389,10 @@ export default (publicConfig, privateConfig, actions) => {
         const dispatchedAction = dispatch(actions.deleted(items, config));
         publish(events.didDelete, { dispatch, getState, data: items });
         return dispatchedAction;
+      })
+      .catch(error => {
+        dispatch(actions.clearPendingActions());
+        return Promise.reject(error);
       });
   };
 
@@ -457,6 +473,10 @@ export default (publicConfig, privateConfig, actions) => {
         const dispatchedAction = dispatch(actions.synced(syncSuccessActions, config));
         publish(events.didSync, { dispatch, getState, data: syncSuccessActions });
         return dispatchedAction;
+      })
+      .catch(error => {
+        dispatch(actions.clearPendingActions());
+        return Promise.reject(error);
       });
   };
 

@@ -56,6 +56,7 @@ const stateMetas = {
     preUpdated: false,
     preDeleted: false,
   },
+  clearPendingActions: { creating: false, updating: false, deleting: false },
 };
 
 /**
@@ -410,6 +411,10 @@ export default (publicConfig, privateConfig, actionReducers) => {
         let newState = updateAction(state, setMetadataForItems(itemsToUpdate, itemsMetas.clearChanges), actionConfig);
         newState = deleteAction(newState, setMetadataForItems(itemsToDelete, itemsMetas.clearChanges), actionConfig);
         return setStateMeta(newState, nextStateMeta);
+      }
+
+      case actionReducers.clearPendingActions: {
+        return setStateMeta(state, nextStateMeta);
       }
 
       default:

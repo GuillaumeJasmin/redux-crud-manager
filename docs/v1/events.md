@@ -30,3 +30,14 @@ list of events:
 * didPreDelete
 * didDelete
 * didSync
+
+# create publish in custom actions
+```js
+const customActions = (defaultActions, internalAction, publish) => {
+  myCustomActions: (params) => (dispatch, getState) => {
+    ...
+    const data = {...};
+    publish('myCustomEvent', { dispatch, getState, data });
+  }
+}
+```

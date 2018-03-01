@@ -22,6 +22,7 @@ Reudx Crud Manager do not include any library around redux, and do not provide a
 * [Configure remoteActions](docs/v1/remote-actions.md)
 * [Configure reducer](docs/v1/reducer.md)
 * [Events](docs/v1/events.md)
+* [Batch actions with redux-batchted-actions](https://gist.github.com/GuillaumeJasmin/3956fb03becdba50dc18ab9a721b9793)
 
 ## Configuration
 

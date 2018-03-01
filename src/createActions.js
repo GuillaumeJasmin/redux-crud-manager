@@ -493,8 +493,15 @@ export default (publicConfig, privateConfig, actions) => {
     clearChanges,
   };
 
+  const customPublish = (eventName, data) => {
+    if (events[eventName]) {
+      throwError(`Event ${eventName} is reserved`);
+    }
+    publish(eventName, data);
+  };
+
   if (publicConfig.customActions) {
-    const customActionsObj = publicConfig.customActions(outputActions, actions);
+    const customActionsObj = publicConfig.customActions(outputActions, actions, customPublish);
     Object.entries(customActionsObj).forEach(([actionName, action]) => {
       if (outputActions[actionName] !== undefined) {
         consoleError(`ReduxCRUDManager: custom actions '${actionName}' is not allowed, ${actionName} is a reserved actions. Change the name`);

@@ -37,7 +37,7 @@ const filterKeys = (items, include, exclude) => (
  * @param {Object} privateConfig
  * @param {Object} actions
  */
-export default (publicConfig, privateConfig, actions) => {
+export default (publicConfig, privateConfig, actions, getActionsWithNestedManagers) => {
   const { remoteActions, reducerPath, idKey } = publicConfig;
   const publish = (eventName, data) => {
     PubSub.publish(`${privateConfig.eventKey}.${eventName}`, data);
@@ -79,7 +79,8 @@ export default (publicConfig, privateConfig, actions) => {
     return remoteActions
       .fetchAll(null, config)
       .then(fetchedItems => {
-        const dispatchedAction = dispatch(actions.fetched(fetchedItems, config));
+        const actionsToDispatch = getActionsWithNestedManagers(fetchedItems, actions, config);
+        const dispatchedAction = publicConfig.batchDispatch(dispatch, actionsToDispatch);
         publish(events.didFetchAll, { dispatch, getState, data: fetchedItems });
         return dispatchedAction;
       });
@@ -521,7 +522,20 @@ export default (publicConfig, privateConfig, actions) => {
   };
 
   if (publicConfig.customActions) {
-    const customActionsObj = publicConfig.customActions(outputActions, actions, customPublish);
+    // const customActionsObj = publicConfig.customActions(outputActions, actions, customPublish, publicConfig);
+
+    const customActionsObj = publicConfig.customActions(
+      {
+        ...outputActions, // deprecated
+        defaultActions: outputActions,
+        internalsActions: actions,
+        publish: customPublish,
+        config: publicConfig,
+      },
+      actions, // deprecated
+      customPublish, // deprecated
+    );
+
     Object.entries(customActionsObj).forEach(([actionName, action]) => {
       if (outputActions[actionName] !== undefined) {
         consoleError(`ReduxCRUDManager: custom actions '${actionName}' is not allowed, ${actionName} is a reserved actions. Change the name`);

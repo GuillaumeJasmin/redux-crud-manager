@@ -443,8 +443,8 @@ export default (publicConfig, privateConfig, actions) => {
       const itemsWithoutId = itemsToCreate.map(item => ({ ...item, [idKey]: undefined }));
       createPromise = remoteActions
         .create(itemsWithoutId, config)
-        .then(items => (
-          items.map((itemCreated, index) => {
+        .then(itemsCreated => (
+          itemsCreated.map((itemCreated, index) => {
             const prevItem = itemsToCreate[index];
             return {
               ...itemCreated,

@@ -1,6 +1,6 @@
 import uniqid from 'uniqid';
 import PubSub from 'pubsub-js';
-import { getIn, asArray, throwError, consoleError } from './helpers';
+import { getIn, asArray, throwError, consoleError, consoleWarn } from './helpers';
 import { metaKey, getMeta, getChanges } from './meta';
 import events from './events';
 
@@ -296,6 +296,7 @@ export default (publicConfig, privateConfig, actions) => {
   };
 
   const createFromItem = (data, localConfig = {}) => (dispatch) => {
+    consoleWarn('createFromItem is deprecated. Use sync(item) instead');
     if (!dispatch) {
       dispatchMissing('createOrUpdate');
     }
@@ -396,13 +397,13 @@ export default (publicConfig, privateConfig, actions) => {
       });
   };
 
-  const sync = (localConfig = {}) => (dispatch, getState) => {
+  const sync = (items, localConfig = {}) => (dispatch, getState) => {
     const config = {
       ...publicConfig,
       ...localConfig,
     };
 
-    const state = getIn(getState(), reducerPath);
+    const state = (items && asArray(items)) || getIn(getState(), reducerPath);
 
     // items to create
     const itemsToCreate = state

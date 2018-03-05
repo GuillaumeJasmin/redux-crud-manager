@@ -165,7 +165,6 @@ dispatch(userManager.actions.sync());
 * fetchOne
 * preCreate
 * create
-* createFromItem
 * preUpdate
 * update
 * preDelete

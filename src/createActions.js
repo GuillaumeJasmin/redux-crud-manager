@@ -43,7 +43,8 @@ export default (publicConfig, privateConfig, actions, getActionsWithLinkedManage
     PubSub.publish(`${privateConfig.eventKey}.${eventName}`, data);
   };
 
-  const fetchedWithLinkedManagers = (items, config) => dispatch => {
+  const fetchedWithLinkedManagers = (data, config) => dispatch => {
+    const items = asArray(data);
     const actionsToDispatch = getActionsWithLinkedManagers(items, actions, config);
     return publicConfig.batchDispatch(dispatch, actionsToDispatch);
   };
@@ -123,7 +124,10 @@ export default (publicConfig, privateConfig, actions, getActionsWithLinkedManage
     return remoteActions
       .fetchOne(itemId, config)
       .then(fetchedItem => {
-        const dispatchedAction = dispatch(actions.fetched([fetchedItem], config));
+        const dispatchedAction = config.enableLinkedManagers
+          ? dispatch(fetchedWithLinkedManagers([fetchedItem], config))
+          : dispatch(actions.fetched([fetchedItem], config));
+
         publish(events.didFetchOne, { dispatch, getState, data: fetchedItem });
         return dispatchedAction;
       });

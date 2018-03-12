@@ -31,11 +31,16 @@ Then, create your store:
 // example of store/index.js
 import { createStore, applyMiddleware, combineReducers } from 'redux';
 import thunk from 'redux-thunk';
-import usersManager from './users.js';
+import { getReducers } from 'redux-crud-manager';
+import users from './users.js';
+import books from './books.js';
 
 const mainReducer = combineReducers({
-  users: usersManager.reducer,
-  // here others reducers...
+  ...getReducers({
+    users,
+    books,
+  }),
+  // here others reducers without redux-crud-manager...
 });
 
 const store = createStore(mainReducer, applyMiddleware(thunk));

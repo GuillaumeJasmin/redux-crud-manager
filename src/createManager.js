@@ -2,7 +2,7 @@ import PubSub from 'pubsub-js';
 import uniqid from 'uniqid';
 import createActions from './createActions';
 import createActionCreators from './createActionCreators';
-import createGetActionsWithNestedManagers from './nestedManagers';
+import createGetActionsWithLinkedManagers from './linkedManagers';
 import createReducer from './createReducer';
 import defaultConfig from './defaultConfig';
 
@@ -30,10 +30,9 @@ const createManager = (config) => {
   const scopeType = Symbol(prefixReducer);
 
   const finalConfig = {
+    enableLinkedManagers: !!config.linkedManagers,
     ...defaultConfig,
     ...config,
-    prefixReducer,
-    scopeType,
   };
 
   const privateConfig = {
@@ -42,12 +41,12 @@ const createManager = (config) => {
     eventKey: uniqid(),
   };
 
-  const getActionsWithNestedManagers = createGetActionsWithNestedManagers(finalConfig);
+  const getActionsWithLinkedManagers = createGetActionsWithLinkedManagers(finalConfig);
 
   const { actionCreators, actionReducers } = createActionCreators(privateConfig);
 
   const reducer = createReducer(finalConfig, privateConfig, actionReducers);
-  const actions = createActions(finalConfig, privateConfig, actionCreators, getActionsWithNestedManagers);
+  const actions = createActions(finalConfig, privateConfig, actionCreators, getActionsWithLinkedManagers);
 
   const subscribe = (eventName, cb) => {
     const token = PubSub.subscribe(`${privateConfig.eventKey}.${eventName}`, (msg, data) => cb(data));
@@ -64,11 +63,12 @@ const createManager = (config) => {
 
   return {
     reducer,
-    // actionCreators,
     actions,
     internalsActions: actionCreators,
     subscribe,
     unsubscribe,
+    config: finalConfig,
+    _setManagers: (managers) => { privateConfig.managers = managers; },
   };
 };
 

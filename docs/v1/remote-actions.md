@@ -17,7 +17,7 @@ Example with the browser native fetch()
 
 ```js
 const remoteActions = {
-  fetchAll: (items, config) => {
+  fetchAll: (itemsNeverUsedHere, config) => {
     return fetch('http://api.yourserver.com/users', { method: 'GET' }).then(response => {
       return response.toJSON().then(users => {
         return users;
@@ -54,7 +54,7 @@ All methods must return a promise, with different data structure:
 Of course, the above example is not optimised, it's only an example.
 Usualy, yo don't define the full URL of each resource like this.
 
-I this example, I used the native fetch() method, but you can use the lirary of your choice, like [Axios](https://github.com/axios/axios) or [restful.js](https://github.com/marmelab/restful.js/tree/master)
+In this example, I used the native fetch() method, but you can use the library of your choice, like [Axios](https://github.com/axios/axios) or [restful.js](https://github.com/marmelab/restful.js/tree/master)
 
 I suggest you to create a function to generate these 5 CRUD methods, like this:
 
@@ -66,7 +66,8 @@ const createRemoteActions = (itemName) => {
   const headers = {...};
 
   return {
-    fetchAll: (items, config) => {
+    // 'items' param is not use here. See [FetchAll items param](#fetchall-items-param)
+    fetchAll: (itemsNeverUsedHere, config) => {
       return fetch(`${baseURL}/${itemName}`, { method: 'GET', headers }).then(response => {
         return response.toJSON().then(items => {
           return models;
@@ -150,7 +151,7 @@ dispatch(booksManager.fetchAll(null, { params: { page: 1 } }))
 
 ```js
 const remoteActions = {
-  fetchAll: (items, config) => {
+  fetchAll: (itemsNeverUsedHere, config) => {
     return fetch(`${baseURL}/${itemName}?page=${config.params.page}&filter=${config.params.filter}`, { method: 'GET' }).then(response => {
       return response.toJSON().then(users => {
         return users;

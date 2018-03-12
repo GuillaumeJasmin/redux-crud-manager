@@ -244,7 +244,7 @@ export default (publicConfig, privateConfig, actionReducers) => {
   });
 
   return (state = defaultState, action) => {
-    if (action.scopeType !== publicConfig.scopeType) return state;
+    if (action.scopeType !== privateConfig.scopeType) return state;
 
     const actionConfig = action.config || {};
 

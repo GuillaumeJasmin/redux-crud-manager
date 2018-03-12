@@ -14,7 +14,7 @@ const manager = createManager({
 
 Note: `yourManagerName` must be one of manager name used into `getReducers()`. See * [Reducers](docs/v1/reducer.md#get-reducers)
 
-Example with the request GET `/authors`, which return an array or authors
+Example with the request GET `/authors`, which return an array of authors
 
 ```js
 [

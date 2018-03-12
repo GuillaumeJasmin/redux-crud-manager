@@ -7,25 +7,15 @@ Before import reducer, make sure init your resource:
 // store/users.js
 import { createManager } from 'redux-crud-manager';
 
-const config = {
-  reducerPath: 'users',
-  remoteActions: {
-    fetchAll: () => {...}
-    fetchOne: () => {...}
-    create: () => {...}
-    update: () => {...}
-    delete: () => {...}
-  }
-}
-
-const usersManager = createManager(config);
-
-export default usersManager;
+export default createManager({
+  reducerPath: ['users'],
+  remoteActions: {...}
+});
 ```
 
-You can now use ```usersManager.reducer``` in your store configuration:
+<a id="get-reducers"></a>
 
-Then, create your store:
+Then, create your reducers with `getReducers()` :
 
 ```js
 // example of store/index.js

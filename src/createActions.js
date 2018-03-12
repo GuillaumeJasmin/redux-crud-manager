@@ -37,10 +37,15 @@ const filterKeys = (items, include, exclude) => (
  * @param {Object} privateConfig
  * @param {Object} actions
  */
-export default (publicConfig, privateConfig, actions) => {
+export default (publicConfig, privateConfig, actions, getActionsWithLinkedManagers) => {
   const { remoteActions, reducerPath, idKey } = publicConfig;
   const publish = (eventName, data) => {
     PubSub.publish(`${privateConfig.eventKey}.${eventName}`, data);
+  };
+
+  const fetchedWithLinkedManagers = (items, config) => dispatch => {
+    const actionsToDispatch = getActionsWithLinkedManagers(items, actions, config);
+    return publicConfig.batchDispatch(dispatch, actionsToDispatch);
   };
 
   const dispatchMissing = (methodName) => {
@@ -79,7 +84,10 @@ export default (publicConfig, privateConfig, actions) => {
     return remoteActions
       .fetchAll(null, config)
       .then(fetchedItems => {
-        const dispatchedAction = dispatch(actions.fetched(fetchedItems, config));
+        const dispatchedAction = config.enableLinkedManagers
+          ? dispatch(fetchedWithLinkedManagers(fetchedItems, config))
+          : dispatch(actions.fetched(fetchedItems, config));
+
         publish(events.didFetchAll, { dispatch, getState, data: fetchedItems });
         return dispatchedAction;
       });
@@ -496,7 +504,7 @@ export default (publicConfig, privateConfig, actions) => {
     return dispatchedAction;
   };
 
-  const outputActions = {
+  const defaultActions = {
     fetchAll,
     fetchOne,
     preCreate,
@@ -514,6 +522,8 @@ export default (publicConfig, privateConfig, actions) => {
     clearChanges,
   };
 
+  let outputActions = {};
+
   const customPublish = (eventName, data) => {
     if (events[eventName]) {
       throwError(`Event ${eventName} is reserved`);
@@ -522,7 +532,8 @@ export default (publicConfig, privateConfig, actions) => {
   };
 
   if (publicConfig.customActions) {
-    const customActionsObj = publicConfig.customActions(outputActions, actions, customPublish);
+    const customActionsObj = publicConfig.customActions(defaultActions, actions, customPublish, publicConfig);
+
     Object.entries(customActionsObj).forEach(([actionName, action]) => {
       if (outputActions[actionName] !== undefined) {
         consoleError(`ReduxCRUDManager: custom actions '${actionName}' is not allowed, ${actionName} is a reserved actions. Change the name`);
@@ -531,6 +542,27 @@ export default (publicConfig, privateConfig, actions) => {
       }
     });
   }
+
+  if (publicConfig.actions) {
+    const customActionsObjV2 = publicConfig.actions({
+      baseActions: actions,
+      defaultActions,
+      defaultActionsRequest: remoteActions,
+      fetchedWithLinkedManagers,
+      publish: customPublish,
+      config: publicConfig,
+      getManagers: () => privateConfig.managers,
+    });
+
+    Object.entries(customActionsObjV2).forEach(([actionName, action]) => {
+      outputActions[actionName] = action;
+    });
+  }
+
+  outputActions = {
+    ...defaultActions,
+    ...outputActions,
+  };
 
   return outputActions;
 };

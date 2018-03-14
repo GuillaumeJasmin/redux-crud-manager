@@ -94,10 +94,10 @@ You can pass a function to customise the check:
 * `excludeProperties` {array[string]} optional - include property on save. Ignored if `includeProperties` is defined
 
 
-* `linkedManagers` {array} optional - default `null`. [See example](docs/v1/linked-managers.md)
+* `bindedManagers` {array} optional - default `null`. [See example](docs/v1/linked-managers.md)
 
 
-* `enableLinkedManagers` {bool} optional - default `true` if `linkedManagers` is not null 
+* `enableBindedManagers` {bool} optional - default `true` if `bindedManagers` is not null 
 
 
 * `batchDispatch` {function} optional - default `(dispatch, actions) => actions.map(action => dispatch(action))`

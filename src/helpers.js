@@ -18,9 +18,8 @@ export const consoleError = (msg) => {
 };
 
 export const consoleWarn = (msg) => {
-  console.error(`ReduxCRUDManager: ${msg}`);
+  console.warn(`ReduxCRUDManager: ${msg}`);
 };
-
 
 export const enumProxy = (data) => {
   if (process.env.NODE_ENV === 'production') {

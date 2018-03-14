@@ -1,6 +1,7 @@
 import PubSub from 'pubsub-js';
 import uniqid from 'uniqid';
 import createActions from './createActions';
+import createActionsV2 from './createActionsV2';
 import createActionCreators from './createActionCreators';
 import createGetActionsWithLinkedManagers from './linkedManagers';
 import createReducer from './createReducer';
@@ -46,7 +47,9 @@ const createManager = (config) => {
   const { actionCreators, actionReducers } = createActionCreators(privateConfig);
 
   const reducer = createReducer(finalConfig, privateConfig, actionReducers);
-  const actions = createActions(finalConfig, privateConfig, actionCreators, getActionsWithLinkedManagers);
+  const actions = finalConfig.remoteActions
+    ? createActions(finalConfig, privateConfig, actionCreators, getActionsWithLinkedManagers)
+    : createActionsV2(finalConfig, privateConfig, actionCreators, getActionsWithLinkedManagers);
 
   const subscribe = (eventName, cb) => {
     const token = PubSub.subscribe(`${privateConfig.eventKey}.${eventName}`, (msg, data) => cb(data));

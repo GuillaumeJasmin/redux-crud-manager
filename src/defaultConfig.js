@@ -1,3 +1,5 @@
+const defaultMiddleware = data => data;
+
 export default {
   idKey: 'id',
   cache: false,
@@ -13,5 +15,10 @@ export default {
   insertDataBeforeCreateSuccess: false,
   linkedManagers: null,
   batchDispatch: (dispatch, actions) => actions.map(action => dispatch(action)),
+  fetchAllMiddleware: defaultMiddleware,
+  fetchOneMiddleware: defaultMiddleware,
+  createMiddleware: defaultMiddleware,
+  updateMiddleware: defaultMiddleware,
+  deleteMiddleware: defaultMiddleware,
   params: {}, // reserved key for user params. Do never user it as internal params
 };

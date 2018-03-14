@@ -1,8 +1,23 @@
 import uniqid from 'uniqid';
 import PubSub from 'pubsub-js';
-import { getIn, asArray, throwError, consoleError, consoleWarn } from './helpers';
+import { getIn, asArray, throwError, consoleWarn } from './helpers';
 import { metaKey, getMeta, getChanges } from './meta';
 import events from './events';
+
+const createUniqAction = () => {
+  class Action {
+    constructor() {
+      this.action = Symbol('action');
+      Action.currentAction = this.action;
+    }
+    isActive() {
+      return this.action === this.constructor.currentAction;
+    }
+  }
+
+  Action.currentAction = null;
+  return Action;
+};
 
 const filterKeysOne = (properties, include, exclude) => {
   const outputItem = {
@@ -38,7 +53,7 @@ const filterKeys = (items, include, exclude) => (
  * @param {Object} actions
  */
 export default (publicConfig, privateConfig, actions, getActionsWithLinkedManagers) => {
-  const { remoteActions, reducerPath, idKey } = publicConfig;
+  const { reducerPath, idKey } = publicConfig;
   const publish = (eventName, data) => {
     PubSub.publish(`${privateConfig.eventKey}.${eventName}`, data);
   };
@@ -53,10 +68,14 @@ export default (publicConfig, privateConfig, actions, getActionsWithLinkedManage
     throwError(`dispatch is undefined in ${methodName}(). You may forget to dispatch(${methodName}()) in customActions ?`);
   };
 
-  const fetchAll = (items, localConfig = {}) => (dispatch, getState) => {
+  const FetchUniq = createUniqAction();
+
+  const fetchAll = ({ data: items, request, config: localConfig }) => (dispatch, getState) => {
     if (!dispatch) {
       dispatchMissing('fetchAll');
     }
+
+    const fetchUniq = new FetchUniq();
 
     const config = {
       ...publicConfig,
@@ -72,7 +91,7 @@ export default (publicConfig, privateConfig, actions, getActionsWithLinkedManage
 
     const state = getIn(getState(), reducerPath);
 
-    if (getMeta(state).fetching) return null;
+    // if (getMeta(state).fetching) return null;
 
     const existingItems = state;
 
@@ -82,9 +101,17 @@ export default (publicConfig, privateConfig, actions, getActionsWithLinkedManage
 
     dispatch(actions.fetching());
 
-    return remoteActions
-      .fetchAll(null, config)
+    return request(items, config)
+      .then(config.fetchAllMiddleware)
       .then(fetchedItems => {
+        // avoid conflicts
+        // if (scopeFetchAllSym !== fetchAllSym) return null;
+
+        if (!fetchUniq.isActive()) {
+          consoleWarn('fetchhAll abort');
+          return null;
+        }
+
         const dispatchedAction = config.enableLinkedManagers
           ? dispatch(fetchedWithLinkedManagers(fetchedItems, config))
           : dispatch(actions.fetched(fetchedItems, config));
@@ -94,7 +121,7 @@ export default (publicConfig, privateConfig, actions, getActionsWithLinkedManage
       });
   };
 
-  const fetchOne = (itemId, localConfig = {}) => (dispatch, getState) => {
+  const fetchOne = ({ data: itemId, request, config: localConfig }) => (dispatch, getState) => {
     if (!dispatch) {
       dispatchMissing('fetchOne');
     }
@@ -121,8 +148,8 @@ export default (publicConfig, privateConfig, actions, getActionsWithLinkedManage
 
     dispatch(actions.fetching());
 
-    return remoteActions
-      .fetchOne(itemId, config)
+    return request(itemId, config)
+      .then(config.fetchOneMiddleware)
       .then(fetchedItem => {
         const dispatchedAction = config.enableLinkedManagers
           ? dispatch(fetchedWithLinkedManagers([fetchedItem], config))
@@ -172,7 +199,7 @@ export default (publicConfig, privateConfig, actions, getActionsWithLinkedManage
     return dispatchedAction;
   };
 
-  const create = (data, localConfig = {}) => (dispatch, getState) => {
+  const create = ({ data, request, config: localConfig }) => (dispatch, getState) => {
     if (!dispatch) {
       dispatchMissing('create');
     }
@@ -211,8 +238,8 @@ export default (publicConfig, privateConfig, actions, getActionsWithLinkedManage
 
     publish(events.willCreate, { dispatch, getState, data: items });
 
-    return remoteActions
-      .create(itemsPropertiesFiltered, config)
+    return request(itemsPropertiesFiltered, config)
+      .then(config.createMiddleware)
       .then(itemsCreated => {
         const dispatchedAction = dispatch(actions.created(itemsCreated, config));
         publish(events.didCreate, { dispatch, getState, data: itemsCreated });
@@ -250,7 +277,7 @@ export default (publicConfig, privateConfig, actions, getActionsWithLinkedManage
     return dispatchedAction;
   };
 
-  const update = (data, localConfig = {}) => (dispatch, getState) => {
+  const update = ({ data, request, config: localConfig }) => (dispatch, getState) => {
     if (!dispatch) {
       dispatchMissing('update');
     }
@@ -294,8 +321,8 @@ export default (publicConfig, privateConfig, actions, getActionsWithLinkedManage
       }
     });
 
-    return remoteActions
-      .update(itemsPropertiesFiltered, config)
+    return request(itemsPropertiesFiltered, config)
+      .then(config.updateMiddleware)
       .then(itemsUpdated => {
         const dispatchedAction = dispatch(actions.updated(itemsUpdated, config));
         publish(events.didUpdate, { dispatch, getState, data: itemsUpdated });
@@ -306,49 +333,6 @@ export default (publicConfig, privateConfig, actions, getActionsWithLinkedManage
         return Promise.reject(error);
       });
   };
-
-  const createFromItem = (data, localConfig = {}) => (dispatch) => {
-    consoleWarn('createFromItem is deprecated. Use sync(item) instead');
-    if (!dispatch) {
-      dispatchMissing('createOrUpdate');
-    }
-
-    const config = {
-      ...publicConfig,
-      ...localConfig,
-    };
-
-    const items = asArray(data);
-
-    items.forEach((item) => {
-      if (!item[idKey]) {
-        throwError(`item.${idKey} is undefined`);
-      }
-
-      if (item[idKey] !== item[metaKey].localId) {
-        throwError(`item with ${idKey} '${item[idKey]}' is already created`);
-      }
-    });
-
-    dispatch(actions.updating(items, config));
-
-    return remoteActions.create(items.map(item => ({ ...item, [idKey]: undefined })))
-      .then(itemsCreated => itemsCreated.map((itemCreated, index) => ({
-        ...itemCreated,
-        [metaKey]: {
-          localId: items[index][metaKey].localId,
-          localIdReplaceNeeded: true,
-        },
-      })))
-      .then(itemsCreated => {
-        dispatch(actions.updated(itemsCreated, config));
-      })
-      .catch(error => {
-        dispatch(actions.clearPendingActions());
-        return Promise.reject(error);
-      });
-  };
-
 
   /**
    *________________________________________________________________________________
@@ -376,7 +360,7 @@ export default (publicConfig, privateConfig, actions, getActionsWithLinkedManage
   };
 
   // unable to named 'delete' because it's a reserved word
-  const deleteMethod = (data, localConfig = {}) => (dispatch, getState) => {
+  const deleteMethod = ({ data, request, config: localConfig }) => (dispatch, getState) => {
     if (!dispatch) {
       dispatchMissing('delete');
     }
@@ -396,8 +380,8 @@ export default (publicConfig, privateConfig, actions, getActionsWithLinkedManage
       return dispatchedAction;
     }
 
-    return remoteActions
-      .delete(items, config)
+    return request(items, config)
+      .then(config.deleteMiddleware)
       .then(() => {
         const dispatchedAction = dispatch(actions.deleted(items, config));
         publish(events.didDelete, { dispatch, getState, data: items });
@@ -409,13 +393,13 @@ export default (publicConfig, privateConfig, actions, getActionsWithLinkedManage
       });
   };
 
-  const sync = (items, localConfig = {}) => (dispatch, getState) => {
+  const sync = ({ data, config: localConfig, createRequest, updateRequest, deleteRequest }) => (dispatch, getState) => {
     const config = {
       ...publicConfig,
       ...localConfig,
     };
 
-    const state = (items && asArray(items)) || getIn(getState(), reducerPath);
+    const state = (data && asArray(data)) || getIn(getState(), reducerPath);
 
     // items to create
     const itemsToCreate = state
@@ -453,8 +437,8 @@ export default (publicConfig, privateConfig, actions, getActionsWithLinkedManage
 
     if (itemsToCreate.length) {
       const itemsWithoutId = itemsToCreate.map(item => ({ ...item, [idKey]: undefined }));
-      createPromise = remoteActions
-        .create(itemsWithoutId, config)
+      createPromise = createRequest(itemsWithoutId, config)
+        .then(config.createMiddleware)
         .then(itemsCreated => (
           itemsCreated.map((itemCreated, index) => {
             const prevItem = itemsToCreate[index];
@@ -472,11 +456,11 @@ export default (publicConfig, privateConfig, actions, getActionsWithLinkedManage
     }
 
     const updatePromise = itemsToUpdate.length
-      ? remoteActions.update(itemsToUpdate, config)
+      ? updateRequest(itemsToUpdate, config).then(config.updateMiddleware)
       : Promise.resolve([]);
 
     const deletePromise = itemsToDelete.length
-      ? remoteActions.delete(itemsToDelete, config).then(() => itemsToDelete)
+      ? deleteRequest(itemsToDelete, config).then(config.deleteMiddleware).then(() => itemsToDelete)
       : Promise.resolve([]);
 
     return Promise
@@ -513,13 +497,9 @@ export default (publicConfig, privateConfig, actions, getActionsWithLinkedManage
     fetchOne,
     preCreate,
     create,
-    creating: actions.creating,
-    createFromItem,
     preUpdate,
-    updating: actions.updating,
     update,
     preDelete,
-    deleting: actions.deleting,
     delete: deleteMethod,
     sync,
     clear,
@@ -535,20 +515,21 @@ export default (publicConfig, privateConfig, actions, getActionsWithLinkedManage
     publish(eventName, data);
   };
 
-  if (publicConfig.customActions) {
-    const customActionsObj = publicConfig.customActions(defaultActions, actions, customPublish, publicConfig);
+  const customActionsObjV2 = publicConfig.actions({
+    baseActions: actions,
+    defaultActions,
+    fetchedWithLinkedManagers,
+    publish: customPublish,
+    config: publicConfig,
+    getManagers: () => privateConfig.managers,
+  });
 
-    Object.entries(customActionsObj).forEach(([actionName, action]) => {
-      if (outputActions[actionName] !== undefined) {
-        consoleError(`ReduxCRUDManager: custom actions '${actionName}' is not allowed, ${actionName} is a reserved actions. Change the name`);
-      } else {
-        outputActions[actionName] = action;
-      }
-    });
-  }
+  Object.entries(customActionsObjV2).forEach(([actionName, action]) => {
+    outputActions[actionName] = action;
+  });
 
   outputActions = {
-    ...defaultActions,
+    // ...defaultActions,
     ...outputActions,
   };
 

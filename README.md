@@ -47,17 +47,15 @@ const usersManager = createManager(config);
 
 * `reducerPath` {array[string]} - required - Most of time, there is a single item: the reducer name. But if you have nested reducer, define the full path.
 
-
-* `remoteActions`  {object} - required - async action for HTTP request. See [how to configure remoteActions](docs/v1/remote-actions.md)
-
-
 * `idKey` {string} - optional - default `id`. The key used as the unique identifier.
+
+* `remoteActions`  {object} - DEPRECATED, use `actions` instead. async action for HTTP request. See [how to configure remoteActions](docs/v1/remote-actions.md)
 
 
 * `customActions` {object} - DEPRECATED, use `actions` instead. make possible to create your own actions. See [customs actions](docs/v1//custom-actions.md)
 
 
-* `actions`  {object} - make possible to create your own actions. See [customs actions](docs/v1//custom-actions.md)
+* `actions` {object} - See [actions](docs/v1//actions.md)
 
 
 * `cache` {bool | function} - enable cache if resources are already fetched. Default: `false`

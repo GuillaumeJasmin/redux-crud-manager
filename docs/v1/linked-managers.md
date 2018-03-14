@@ -4,7 +4,7 @@ Redux CRUD Manager - Linked Managers
 
 ```js
 const manager = createManager({
-  linkedManagers: {
+  bindedManagers: {
     yourManagerName: {
       path: ['itemInst'],
     },
@@ -50,7 +50,7 @@ Example with the request GET `/authors`, which return an array of authors
 ```js
 const authorManager = createManager({
   ...
-  linkedManagers: {
+  bindedManagers: {
     books: {
       path: ['books'],
     },

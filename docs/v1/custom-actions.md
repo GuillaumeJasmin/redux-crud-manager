@@ -15,7 +15,7 @@ const userManager = createManager({
     }
   }),
 
-  actions: ({ baseActions, remoteActions, publish, fetchedWithLinkedManagers, config, getManagers }) => ({
+  actions: ({ baseActions, remoteActions, publish, fetchedWithBindedManagers, config, getManagers }) => ({
     customFetchAll: (your1stParam, your2ndParam) => (dispatch, getState) => {
       dispatch(baseActions.fetching());
       fetch('http://...').then(items => {
@@ -38,7 +38,7 @@ dispatch(userManager.actions.customFetchAll();
 
 * publish {func} - See [Events](docs/v1/events.md)
 
-* fetchedWithLinkedManagers {func} . Make possible to fetch items of manager and hydrate items of linked manager. Example: `fetchedWithLinkedManagers(items, config)`
+* fetchedWithBindedManagers {func} . Make possible to fetch items of manager and hydrate items of linked manager. Example: `fetchedWithBindedManagers(items, config)`
 
 * config {object} - all config of manager
 

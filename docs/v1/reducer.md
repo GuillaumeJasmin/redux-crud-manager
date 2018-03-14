@@ -21,15 +21,16 @@ Then, create your reducers with `getReducers()` :
 // example of store/index.js
 import { createStore, applyMiddleware, combineReducers } from 'redux';
 import thunk from 'redux-thunk';
-import { getReducers } from 'redux-crud-manager';
+import { bindManagers } from 'redux-crud-manager';
 import users from './users.js';
 import books from './books.js';
 
+// bind manager if you use binded Managers
+bindManagers({ users, books });
+
 const mainReducer = combineReducers({
-  ...getReducers({
-    users,
-    books,
-  }),
+  users: users.reducer,
+  books: books.reducer,
   // here others reducers without redux-crud-manager...
 });
 

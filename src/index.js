@@ -11,7 +11,7 @@ import {
   syncingKeys,
 } from './meta';
 import events from './events';
-import getReducers from './injectLinkedManagers';
+import bindManagers from './bindManagers';
 
 export {
   createManager,
@@ -25,5 +25,5 @@ export {
   syncingKeys,
   stateSanitizer,
   events,
-  getReducers,
+  bindManagers,
 };

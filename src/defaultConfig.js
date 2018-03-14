@@ -13,7 +13,7 @@ export default {
   includeProperties: null,
   excludeProperties: null,
   insertDataBeforeCreateSuccess: false,
-  linkedManagers: null,
+  bindedManagers: null,
   batchDispatch: (dispatch, actions) => actions.map(action => dispatch(action)),
   fetchAllMiddleware: defaultMiddleware,
   fetchOneMiddleware: defaultMiddleware,

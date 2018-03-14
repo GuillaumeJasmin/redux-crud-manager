@@ -52,15 +52,15 @@ const filterKeys = (items, include, exclude) => (
  * @param {Object} privateConfig
  * @param {Object} actions
  */
-export default (publicConfig, privateConfig, actions, getActionsWithLinkedManagers) => {
+export default (publicConfig, privateConfig, actions, getActionsWithBindedManagers) => {
   const { reducerPath, idKey } = publicConfig;
   const publish = (eventName, data) => {
     PubSub.publish(`${privateConfig.eventKey}.${eventName}`, data);
   };
 
-  const fetchedWithLinkedManagers = (data, config) => dispatch => {
+  const fetchedWithBindedManagers = (data, config) => dispatch => {
     const items = asArray(data);
-    const actionsToDispatch = getActionsWithLinkedManagers(items, actions, config);
+    const actionsToDispatch = getActionsWithBindedManagers(items, actions, config);
     return publicConfig.batchDispatch(dispatch, actionsToDispatch);
   };
 
@@ -112,8 +112,8 @@ export default (publicConfig, privateConfig, actions, getActionsWithLinkedManage
           return null;
         }
 
-        const dispatchedAction = config.enableLinkedManagers
-          ? dispatch(fetchedWithLinkedManagers(fetchedItems, config))
+        const dispatchedAction = config.enableBindedManagers
+          ? dispatch(fetchedWithBindedManagers(fetchedItems, config))
           : dispatch(actions.fetched(fetchedItems, config));
 
         publish(events.didFetchAll, { dispatch, getState, data: fetchedItems });
@@ -151,8 +151,8 @@ export default (publicConfig, privateConfig, actions, getActionsWithLinkedManage
     return request(itemId, config)
       .then(config.fetchOneMiddleware)
       .then(fetchedItem => {
-        const dispatchedAction = config.enableLinkedManagers
-          ? dispatch(fetchedWithLinkedManagers([fetchedItem], config))
+        const dispatchedAction = config.enableBindedManagers
+          ? dispatch(fetchedWithBindedManagers([fetchedItem], config))
           : dispatch(actions.fetched([fetchedItem], config));
 
         publish(events.didFetchOne, { dispatch, getState, data: fetchedItem });
@@ -518,7 +518,7 @@ export default (publicConfig, privateConfig, actions, getActionsWithLinkedManage
   const customActionsObjV2 = publicConfig.actions({
     baseActions: actions,
     defaultActions,
-    fetchedWithLinkedManagers,
+    fetchedWithBindedManagers,
     publish: customPublish,
     config: publicConfig,
     getManagers: () => privateConfig.managers,

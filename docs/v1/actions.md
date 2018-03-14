@@ -5,7 +5,7 @@ Redux CRUD Manager - Customs actions
 
 ```js
 const userManager = createManager({
-  actions: ({ defaultActions, baseActions, publish, fetchedWithLinkedManagers, config, getManagers }) => ({
+  actions: ({ defaultActions, baseActions, publish, fetchedWithBindedManagers, config, getManagers }) => ({
     fetchAll: () => {
       return defaultActions.fetchAll({
         request: () => fetch('http://api.yourserver.com/users', { method: 'GET' }).then(response => {
@@ -160,7 +160,7 @@ const booksManager = createManager({
 
 * publish {func} - See [Events](docs/v1/events.md)
 
-* fetchedWithLinkedManagers {func} . Make possible to fetch items of manager and hydrate items of linked manager. Example: `fetchedWithLinkedManagers(items, config)`
+* fetchedWithBindedManagers {func} . Make possible to fetch items of manager and hydrate items of linked manager. Example: `fetchedWithBindedManagers(items, config)`
 
 * config {object} - all config of manager
 

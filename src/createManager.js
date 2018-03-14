@@ -3,9 +3,10 @@ import uniqid from 'uniqid';
 import createActions from './createActions';
 import createActionsV2 from './createActionsV2';
 import createActionCreators from './createActionCreators';
-import createGetActionsWithLinkedManagers from './linkedManagers';
+import createGetActionsWithBindedManagers from './bindedManagers';
 import createReducer from './createReducer';
 import defaultConfig from './defaultConfig';
+
 
 /**
  * Create Manager
@@ -25,13 +26,13 @@ import defaultConfig from './defaultConfig';
  * @param {string[]} config.excludeProperties
  *
  */
-const createManager = (config) => {
+export default (config) => {
   const reducerKey = config.reducerPath.map(item => item.toUpperCase()).join('_');
   const prefixReducer = `REDUX_CRUD_MANAGER___${reducerKey}`;
   const scopeType = Symbol(prefixReducer);
 
   const finalConfig = {
-    enableLinkedManagers: !!config.linkedManagers,
+    enableBindedManagers: !!config.bindedManagers,
     ...defaultConfig,
     ...config,
   };
@@ -42,14 +43,14 @@ const createManager = (config) => {
     eventKey: uniqid(),
   };
 
-  const getActionsWithLinkedManagers = createGetActionsWithLinkedManagers(finalConfig);
+  const getActionsWithBindedManagers = createGetActionsWithBindedManagers(finalConfig, privateConfig);
 
   const { actionCreators, actionReducers } = createActionCreators(privateConfig);
 
   const reducer = createReducer(finalConfig, privateConfig, actionReducers);
   const actions = finalConfig.remoteActions
-    ? createActions(finalConfig, privateConfig, actionCreators, getActionsWithLinkedManagers)
-    : createActionsV2(finalConfig, privateConfig, actionCreators, getActionsWithLinkedManagers);
+    ? createActions(finalConfig, privateConfig, actionCreators, getActionsWithBindedManagers)
+    : createActionsV2(finalConfig, privateConfig, actionCreators, getActionsWithBindedManagers);
 
   const subscribe = (eventName, cb) => {
     const token = PubSub.subscribe(`${privateConfig.eventKey}.${eventName}`, (msg, data) => cb(data));
@@ -67,12 +68,11 @@ const createManager = (config) => {
   return {
     reducer,
     actions,
-    internalsActions: actionCreators,
+    internalsActions: actionCreators, // deprecated key
+    baseActions: actionCreators,
     subscribe,
     unsubscribe,
     config: finalConfig,
     _setManagers: (managers) => { privateConfig.managers = managers; },
   };
 };
-
-export default createManager;

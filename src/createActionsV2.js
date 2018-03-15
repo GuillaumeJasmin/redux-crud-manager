@@ -1,6 +1,6 @@
 import uniqid from 'uniqid';
 import PubSub from 'pubsub-js';
-import { getIn, asArray, throwError, consoleWarn } from './helpers';
+import { getIn, asArray, throwError, consoleWarn, consoleError } from './helpers';
 import { metaKey, getMeta, getChanges } from './meta';
 import events from './events';
 
@@ -507,7 +507,13 @@ export default (publicConfig, privateConfig, actions, getActionsWithBindedManage
     clearChanges,
   };
 
-  let outputActions = {};
+  let outputActions = {
+    preCreate,
+    preUpdate,
+    preDelete,
+    clear,
+    clearChanges,
+  };
 
   const customPublish = (eventName, data) => {
     if (events[eventName]) {
@@ -516,22 +522,27 @@ export default (publicConfig, privateConfig, actions, getActionsWithBindedManage
     publish(eventName, data);
   };
 
-  const customActionsObjV2 = publicConfig.actions({
+  const userActions = publicConfig.actions({
     baseActions: actions,
     defaultActions,
-    fetchedWithBindedManagers,
     publish: customPublish,
     config: publicConfig,
     getManagers: () => privateConfig.managers,
   });
 
-  Object.entries(customActionsObjV2).forEach(([actionName, action]) => {
-    outputActions[actionName] = action;
+  const outputUserActions = {};
+
+  Object.entries(userActions).forEach(([actionName, action]) => {
+    if (outputActions[actionName] !== undefined) {
+      consoleError(`ReduxCRUDManager: actions '${actionName}' is not allowed, ${actionName} is a reserved actions. Change the name`);
+    } else {
+      outputUserActions[actionName] = action;
+    }
   });
 
   outputActions = {
-    // ...defaultActions,
     ...outputActions,
+    ...userActions,
   };
 
   return outputActions;

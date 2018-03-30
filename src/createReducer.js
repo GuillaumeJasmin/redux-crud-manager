@@ -101,7 +101,16 @@ export default (publicConfig, privateConfig, actionReducers) => {
         const index = state.findIndex(_item => _item[idKey] === item[idKey]);
 
         if (index !== -1) {
-          itemsToUpdate[index] = { $set: item };
+          if (config.merge) {
+            itemsToUpdate[index] = {
+              $set: {
+                ...state[index],
+                ...item,
+              },
+            };
+          } else {
+            itemsToUpdate[index] = { $set: item };
+          }
         } else {
           itemToAdd.push(item);
         }

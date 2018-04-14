@@ -6,16 +6,17 @@ import events from './events';
 
 const createUniqAction = () => {
   class Action {
-    constructor() {
+    constructor(requestKey) {
+      this.requestKey = requestKey;
       this.action = Symbol('action');
-      Action.currentAction = this.action;
+      Action.actionsKeys[this.requestKey] = this.action;
     }
     isActive() {
-      return this.action === this.constructor.currentAction;
+      return this.action === this.constructor.actionsKeys[this.requestKey];
     }
   }
 
-  Action.currentAction = null;
+  Action.actionsKeys = {};
   return Action;
 };
 
@@ -68,14 +69,17 @@ export default (publicConfig, privateConfig, actions, getActionsWithBindedManage
     throwError(`dispatch is undefined in ${methodName}(). You may forget to dispatch(${methodName}()) in customActions ?`);
   };
 
-  const FetchUniq = createUniqAction();
+  // const FetchAllTrace = createUniqAction();
+  // const fetchAllTraceKeys = {};
 
-  const fetchAll = ({ data: items, request, config: localConfig }) => (dispatch, getState) => {
+  const UniqueAction = createUniqAction();
+
+  const fetchAll = ({ data: items, request, config: localConfig, requestKey }) => (dispatch, getState) => {
     if (!dispatch) {
       dispatchMissing('fetchAll');
     }
 
-    const fetchUniq = new FetchUniq();
+    const uniqueAction = new UniqueAction(requestKey);
 
     const config = {
       ...publicConfig,
@@ -107,8 +111,8 @@ export default (publicConfig, privateConfig, actions, getActionsWithBindedManage
         // avoid conflicts
         // if (scopeFetchAllSym !== fetchAllSym) return null;
 
-        if (!fetchUniq.isActive()) {
-          consoleWarn('fetchhAll abort');
+        if (!uniqueAction.isActive()) {
+          consoleWarn(`fetchAll abort: ${requestKey}`);
           return null;
         }
 
@@ -121,10 +125,12 @@ export default (publicConfig, privateConfig, actions, getActionsWithBindedManage
       });
   };
 
-  const fetchOne = ({ data: itemId, request, config: localConfig }) => (dispatch, getState) => {
+  const fetchOne = ({ data: itemId, request, config: localConfig, requestKey }) => (dispatch, getState) => {
     if (!dispatch) {
       dispatchMissing('fetchOne');
     }
+
+    const uniqueAction = new UniqueAction(requestKey);
 
     const config = {
       ...publicConfig,
@@ -136,7 +142,6 @@ export default (publicConfig, privateConfig, actions, getActionsWithBindedManage
 
     publish(events.willFetchOne, { dispatch, getState, data: itemId });
 
-    if (getMeta(state).fetching) return Promise.resolve(null);
 
     const item = state.find(_item => _item[idKey] === itemId);
 
@@ -151,6 +156,11 @@ export default (publicConfig, privateConfig, actions, getActionsWithBindedManage
     return request(itemId, config)
       .then(config.fetchOneMiddleware)
       .then(fetchedItem => {
+        if (!uniqueAction.isActive()) {
+          consoleWarn(`fetchOne abort: ${requestKey}`);
+          return null;
+        }
+
         const dispatchedAction = config.enableBindedManagers
           ? dispatch(fetchedWithBindedManagers([fetchedItem], config))
           : dispatch(actions.fetched([fetchedItem], config));

@@ -8,6 +8,7 @@ const userManager = createManager({
   actions: ({ defaultActions, baseActions, publish, fetchedWithBindedManagers, config, getManagers }) => ({
     fetchAll: () => {
       return defaultActions.fetchAll({
+        requestKey: 'fetchAll',
         request: () => fetch('http://api.yourserver.com/users', { method: 'GET' }).then(response => {
           return response.toJSON();
         }),
@@ -17,9 +18,10 @@ const userManager = createManager({
     create: (data) => {
       return defaultActions.create({
         data,
-        request: items => fetch(`http://api.yourserver.com/users`, { method: 'POST', body: JSON.stringify(items) }).then(response => {
-          return response.toJSON();
-        }),
+        requestKey: 'create',
+        request: items => fetch(`http://api.yourserver.com/users`, { method: 'POST', body: JSON.stringify(items))   .then(response => {
+            return response.toJSON();
+          }),
         config: {}
       });
     },

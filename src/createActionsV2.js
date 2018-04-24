@@ -106,7 +106,7 @@ export default (publicConfig, privateConfig, actions, getActionsWithBindedManage
     dispatch(actions.fetching());
 
     return request(items, config)
-      .then(config.fetchAllMiddleware)
+      .then((res) => config.fetchAllMiddleware(res, getState))
       .then(fetchedItems => {
         // avoid conflicts
         // if (scopeFetchAllSym !== fetchAllSym) return null;
@@ -154,7 +154,7 @@ export default (publicConfig, privateConfig, actions, getActionsWithBindedManage
     dispatch(actions.fetching());
 
     return request(itemId, config)
-      .then(config.fetchOneMiddleware)
+      .then((res) => config.fetchOneMiddleware(res, getState))
       .then(fetchedItem => {
         if (!uniqueAction.isActive()) {
           consoleWarn(`fetchOne abort: ${requestKey}`);
@@ -250,7 +250,7 @@ export default (publicConfig, privateConfig, actions, getActionsWithBindedManage
     publish(events.willCreate, { dispatch, getState, data: items });
 
     return request(itemsPropertiesFiltered, config)
-      .then(config.createMiddleware)
+      .then((res) => config.createMiddleware(res, getState))
       .then(itemsCreated => {
         const dispatchedAction = dispatch(actions.created(itemsCreated, config));
         publish(events.didCreate, { dispatch, getState, data: itemsCreated });
@@ -333,7 +333,7 @@ export default (publicConfig, privateConfig, actions, getActionsWithBindedManage
     });
 
     return request(itemsPropertiesFiltered, config)
-      .then(config.updateMiddleware)
+      .then((res) => config.updateMiddleware(res, getState))
       .then(itemsUpdated => {
         const dispatchedAction = dispatch(actions.updated(itemsUpdated, config));
         publish(events.didUpdate, { dispatch, getState, data: itemsUpdated });
@@ -392,7 +392,7 @@ export default (publicConfig, privateConfig, actions, getActionsWithBindedManage
     }
 
     return request(items, config)
-      .then(config.deleteMiddleware)
+      .then((res) => config.deleteMiddleware(res, getState))
       .then(() => {
         const dispatchedAction = dispatch(actions.deleted(items, config));
         publish(events.didDelete, { dispatch, getState, data: items });
@@ -449,7 +449,7 @@ export default (publicConfig, privateConfig, actions, getActionsWithBindedManage
     if (itemsToCreate.length) {
       const itemsWithoutId = itemsToCreate.map(item => ({ ...item, [idKey]: undefined }));
       createPromise = createRequest(itemsWithoutId, config)
-        .then(config.createMiddleware)
+        .then((res) => config.createMiddleware(res, getState))
         .then(itemsCreated => (
           itemsCreated.map((itemCreated, index) => {
             const prevItem = itemsToCreate[index];
@@ -467,11 +467,11 @@ export default (publicConfig, privateConfig, actions, getActionsWithBindedManage
     }
 
     const updatePromise = itemsToUpdate.length
-      ? updateRequest(itemsToUpdate, config).then(config.updateMiddleware)
+      ? updateRequest(itemsToUpdate, config).then((res) => config.updateMiddleware(res, getState))
       : Promise.resolve([]);
 
     const deletePromise = itemsToDelete.length
-      ? deleteRequest(itemsToDelete, config).then(config.deleteMiddleware).then(() => itemsToDelete)
+      ? deleteRequest(itemsToDelete, config).then((res) => config.deleteMiddleware(res, getState)).then(() => itemsToDelete)
       : Promise.resolve([]);
 
     return Promise
